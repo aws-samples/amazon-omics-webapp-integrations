@@ -1,0 +1,62 @@
+{
+  "name": "omics-demo-infra",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bin/infra.js",
+  "scripts": {
+    "build": "tsc ",
+    "watch": "tsc -w",
+    "test": "jest",
+    "cdk": "cdk",
+    "prepare": "husky install",
+    "deployInfra": "cdk deploy --app 'npx ts-node --prefer-ts-exts bin/infra.ts' --outputs-file ./cdk-infra-outputs.json",
+    "buildWeb": "node buildWeb.mjs && cd ./webapp && npm install && npm run build ",
+    "deployFrontend": "cdk deploy --app 'npx ts-node --prefer-ts-exts bin/frontend.ts' --outputs-file ./cdk-frontend-outputs.json",
+    "destroyInfra": "cdk destroy --app 'npx ts-node --prefer-ts-exts bin/infra.ts' --force",
+    "destroyFrontend": "cdk destroy --app 'npx ts-node --prefer-ts-exts bin/frontend.ts' --force"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "pre-push": "npm run test "
+    }
+  },
+  "lint-staged": {
+    "*.{js,ts,tsx,jsx}": "eslint --cache",
+    "*.{js,ts,tsx,jsx,md}": "prettier --write --ignore-unknown"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@ssh.gitlab.aws.dev:hkoizum/omics-demo-infra.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-cdk-lib": "^2.70.0",
+    "cdk-nag": "^2.23.5",
+    "constructs": "^10.0.0",
+    "esbuild": "^0.17.8",
+    "fs": "^0.0.1-security",
+    "lodash": "^4.17.21",
+    "path": "^0.12.7"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.110",
+    "@types/jest": "^29.4.0",
+    "@types/lodash": "^4.14.191",
+    "@types/node": "18.11.18",
+    "@typescript-eslint/eslint-plugin": "^5.52.0",
+    "@typescript-eslint/parser": "^5.52.0",
+    "aws-cdk": "^2.70.0",
+    "eslint": "^8.34.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "husky": "^7.0.0",
+    "jest": "^29.4.1",
+    "lint-staged": "^13.1.2",
+    "prettier": "^2.8.4",
+    "ts-jest": "^29.0.5",
+    "ts-node": "^10.9.1",
+    "typescript": "~4.9.5"
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CDK context schema",
+  "description": "Schema for context in cdk.json",
+  "type": "object",
+  "properties": {
+    "context": {
+      "description": "CDK Context",
+      "type": "object",
+      "properties": {
+        "stage": {
+          "description": "Stage name",
+          "type": "string"
+        },
+        "base": {
+          "description": "Base configuation",
+          "type": "object",
+          "properties": {
+            "deployAwsEnv": {
+              "description": "AWS account information for deployment",
+              "type": "object",
+              "properties": {
+                "accountId": {
+                  "description": "Account ID",
+                  "type": "string",
+                  "minLength": 12,
+                  "maxLength": 12
+                },
+                "region": {
+                  "description": "Region",
+                  "type": "string",
+                  "enum": ["us-east-1", "us-west-2", "ap-southeast-1"]
+                }
+              }
+            }
+          }
+        },
+        "dev": {
+          "description": "Dev enviroment configuation",
+          "type": "object",
+          "properties": {
+            "appName": {
+              "description": "An application name",
+              "type": "string"
+            },
+            "alias": {
+              "description": "Your alias name",
+              "type": "string"
+            },
+            "appAdminEmail": {
+              "description": "Admin email for Amazon Cognito",
+              "type": "string",
+              "format": "email"
+            },
+            "allowedIps": {
+              "description": "Allowed ip range",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "((^|\\.)((25[0-5])|(2[0-4]\\d)|(1\\d\\d)|([1-9]?\\d))){4}\\/(?:\\d|[12]\\d|3[01])$"
+              }
+            },
+            "required": ["appName", "alias", "appAdminEmail", "allowedIps"]
+          }
+        },
+        "prod": {}
+      }
+    },
+    "required": ["stage", "dev"]
+  },
+  "required": ["context"]
+}

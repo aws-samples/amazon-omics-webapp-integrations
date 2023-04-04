@@ -1,0 +1,213 @@
+type OmicsListRunCommand @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"]) {
+  name: String!
+  id: String
+  arn: String
+  creationTime: AWSDateTime
+  priority: String
+  workflowId: String!
+  storageCapacity: String
+  startTime: AWSDateTime
+  stopTime: AWSDateTime
+  status: String
+}
+
+type OmicsListWorkflow @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"]) {
+  id: String
+  name: String
+  creationTime: AWSDateTime
+  status: String
+  digest: String
+  arn: String
+  workflowId: String
+}
+
+type OmicsListRunTasks @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"]) {
+  name: String
+  creationTime: AWSDateTime
+  startTime: AWSDateTime
+  status: String
+  stopTime: AWSDateTime
+  cpu: Int
+  memory: Int
+  taskId: String!
+}
+
+type OmicsListRunDetails @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"]) {
+  name: String!
+  id: String
+  arn: String
+  creationTime: AWSDateTime
+  priority: String
+  workflowId: String!
+  storageCapacity: String
+  # startTime: 2023-02-16T04:16:04.619Z,
+  startTime: AWSDateTime
+  # stopTime: 2023-02-16T06:52:33.329Z,
+  stopTime: AWSDateTime
+  status: String
+  tasks: [OmicsListRunTasks]
+}
+
+type OmicsGetRunCommandOutput
+  @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"]) {
+  arn: String
+  creationTime: String
+  definition: String
+  digest: String
+  id: String
+  logLevel: String
+  name: String
+  outputUri: String
+  parameters: AWSJSON
+  priority: String
+  resourceDigests: AWSJSON
+  roleArn: String
+  runId: String
+  startTime: AWSDateTime
+  startedBy: String
+  status: String
+  statusMessage: String
+  stopTime: AWSDateTime
+  storageCapacity: Int
+  workflowId: String
+  workflowType: String
+}
+
+type OmicsStartRunCommandOutput
+  @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"]) {
+  arn: String
+  id: String
+  status: String
+}
+
+type OmicsGetWorkflowCommand
+  @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"]) {
+  arn: String
+  definition: String
+  description: String
+  engine: String
+  id: String
+  name: String
+  main: String
+  parameterTemplate: AWSJSON
+  storageCapacity: Int
+  status: String
+  tags: String
+  type: String
+}
+
+type OmicsCreateWorkflowCommandOutput
+  @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"]) {
+  arn: String
+  id: String
+  status: String
+}
+
+type EncryptionConfiguration {
+  encryptionType: String
+}
+
+type ImageScanningConfiguration {
+  scanOnPush: Boolean
+}
+
+type Repository {
+  createdAt: AWSDateTime
+  encryptionConfiguration: EncryptionConfiguration
+  imageScanningConfiguration: ImageScanningConfiguration
+  imageTagMutability: String
+  registryId: String
+  repositoryArn: String
+  repositoryName: String
+  repositoryUri: String
+}
+
+type CreateRepositoryCommandOutput
+  @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"]) {
+  repository: Repository
+}
+
+type DescribeRepositoriesCommandOutput
+  @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"]) {
+  repositories: [Repository]
+}
+
+############################### Inputs ###############################
+
+input OmicsStartRunCommandInput {
+  logLevel: String
+  name: String!
+  outputUri: String!
+  parameters: AWSJSON
+  priority: String
+  requestId: String
+  runId: String
+  storageCapacity: Float
+  workflowId: String
+  workflowType: String
+}
+
+input OmicsCreateWorkflowCommandInput {
+  definitionUri: String
+  definitionZip: [Int]
+  description: String
+  engine: String
+  name: String
+  parameterTemplate: AWSJSON
+  requestId: String
+  storageCapacity: Float
+}
+
+input EncryptionConfigurationInput {
+  encryptionType: String
+}
+
+input ImageScanningConfigurationInput {
+  scanOnPush: Boolean
+}
+
+input CreateRepositoryCommandInput {
+  encryptionConfiguration: EncryptionConfigurationInput
+  imageScanningConfiguration: ImageScanningConfigurationInput
+  imageTagMutability: String
+  registryId: String
+  repositoryName: String!
+}
+
+############################### Queries ###############################
+type Query {
+  # ListWorkflow
+  getListWorkflow(name: String, type: String): [OmicsListWorkflow]
+    @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"])
+  # ListRunCommand
+  getListRunCommand: [OmicsListRunCommand]
+    @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"])
+  # ListRunTasks
+  getListRunTasks(id: String!, status: String): [OmicsListRunTasks]
+    @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"])
+  # OmicsListRunDetails
+  getListRunDetails: [OmicsListRunDetails]
+    @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"])
+  # GetRunCommand
+  getRunCommand(id: String!): OmicsGetRunCommandOutput
+    @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"])
+  # GetWorkflowCommand
+  getWorkflowCommand(id: String!): OmicsGetWorkflowCommand
+    @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"])
+  # DescribeRepositoriesCommand
+  describeRepositoriesCommand: DescribeRepositoriesCommandOutput
+    @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"])
+}
+
+############################### Mutations ###############################
+type Mutation {
+  # Start Run command
+  startRunCommand(input: OmicsStartRunCommandInput!): OmicsStartRunCommandOutput
+    @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"])
+  # Create Workflow
+  createWorkflowCommand(input: OmicsCreateWorkflowCommandInput!): OmicsCreateWorkflowCommandOutput
+    @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"])
+  # Create Repository
+  createRepositoryCommand(input: CreateRepositoryCommandInput!): CreateRepositoryCommandOutput
+    @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"])
+}

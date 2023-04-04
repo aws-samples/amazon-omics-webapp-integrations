@@ -1,0 +1,34 @@
+*.js
+*.d.ts
+node_modules
+.vscode/
+.eslintcache
+docs/.$*
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out
+cdk.context.json
+cdk-*-outputs.json
+.DS_Store
+.env
+
+#Webapp
+webapp/node_modules
+webapp/.quasar
+webapp/dist
+webapp/npm-debug.log*
+webapp/.idea
+webapp/*.suo
+webapp/*.ntvs*
+webapp/*.njsproj
+webapp/*.sln
+
+# Negate
+!.eslintrc.js
+!jest.config.js
+!quasar.config.js
+!postcss.config.js
+!webapp/src/stores/index.js
+!webapp/src/stores/store-flag.d.ts
+# test script
