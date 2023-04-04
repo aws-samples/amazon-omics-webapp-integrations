@@ -1,5 +1,5 @@
 {
-  "name": "omics-demo-infra",
+  "name": "omics-webapp",
   "version": "1.0.0",
   "description": "",
   "main": "bin/infra.js",
