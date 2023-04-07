@@ -182,7 +182,7 @@ export class ApplicationStack extends NestedStack {
 
     const listOmicsJob = new NodejsLambda(this, `${id}-listOmicsJob`, {
       runtime: aws_lambda.Runtime.NODEJS_18_X,
-      functionName: `${id}-listOmicsJob`,
+      functionName: `listOmicsJob-${id}`.slice(0, 64),
       entry: path.join(__dirname, '../api/lambda/listOmicsJob/listOmicsJob.ts'),
       depsLockFilePath: path.join(__dirname, '../api/lambda/listOmicsJob/package-lock.json'),
       handler: 'handler',
@@ -200,7 +200,7 @@ export class ApplicationStack extends NestedStack {
 
     const mutationOmics = new NodejsLambda(this, `${id}-mutationOmics`, {
       runtime: aws_lambda.Runtime.NODEJS_18_X,
-      functionName: `${id}-mutationOmics`,
+      functionName: `mutationOmics-${id}`.slice(0, 64),
       entry: path.join(__dirname, '../api/lambda/mutationOmics/mutationOmics.ts'),
       depsLockFilePath: path.join(__dirname, '../api/lambda/mutationOmics/package-lock.json'),
       handler: 'handler',
@@ -219,7 +219,7 @@ export class ApplicationStack extends NestedStack {
 
     const manipulationEcr = new NodejsLambda(this, `${id}-manipulationEcr`, {
       runtime: aws_lambda.Runtime.NODEJS_18_X,
-      functionName: `${id}-manipulationEcr`,
+      functionName: `manipulationEcr-${id}`.slice(0, 64),
       entry: path.join(__dirname, '../api/lambda/manipulationEcr/manipulationEcr.ts'),
       depsLockFilePath: path.join(__dirname, '../api/lambda/manipulationEcr/package-lock.json'),
       handler: 'handler',
