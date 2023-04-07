@@ -107,10 +107,10 @@ npm run deployFrontend -- --profile <your profile>
 
 ```bash
 # 1. Destroy the frontend stack
-npm run destroyFrontend --profile <your profile>
+npm run destroyFrontend -- --profile <your profile>
 
 # 2. Destroy the infrastructure stack with AWS CDK
-npm run destroyInfra ---profile <your profile>
+npm run destroyInfra -- ---profile <your profile>
 
 ```
 
