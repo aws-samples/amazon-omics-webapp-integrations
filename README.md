@@ -118,7 +118,7 @@ Also, delete your repositories in ECR if you need.
 
 ## Commands
 
-- `npm run deployInfra -- ---profile <your profile>`
+- `npm run deployInfra -- --profile <your profile>`
   - Deploy the infrastructure stack with AWS CDK
 - `npm run buildWeb`
   - SPA building with Quasar
