@@ -25,10 +25,6 @@
     "*.{js,ts,tsx,jsx}": "eslint --cache",
     "*.{js,ts,tsx,jsx,md}": "prettier --write --ignore-unknown"
   },
-  "repository": {
-    "type": "git",
-    "url": "git@ssh.gitlab.aws.dev:hkoizum/omics-demo-infra.git"
-  },
   "author": "",
   "license": "ISC",
   "dependencies": {
