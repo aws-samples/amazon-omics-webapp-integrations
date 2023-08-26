@@ -13,14 +13,14 @@
     "test": "echo \"No test specified\" && exit 0"
   },
   "dependencies": {
-    "@aws-sdk/client-cognito-identity-provider": "^3.289.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.398.0",
     "@quasar/cli": "^2.0.0",
     "@quasar/extras": "^1.0.0",
     "@urql/devtools": "^2.0.3",
     "@urql/exchange-auth": "^1.0.0",
     "@urql/vue": "^1.0.4",
     "apexcharts": "^3.37.0",
-    "aws-amplify": "^5.0.14",
+    "aws-amplify": "^5.3.10",
     "graphql": "^16.6.0",
     "lodash": "^4.17.21",
     "path": "^0.12.7",
