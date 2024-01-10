@@ -46,7 +46,7 @@
       "appName": "omics-app",
       "alias": "japan-hcls",
       "appAdminEmail": "<Your admin email address>",
-      "allowedIps": ["27.0.3.0/24"],
+      "allowedIps": ["<Allowed CIDR>"],
       "omicsBuckets": {
         "input": "<Your input bucket name>",
         "output": "<Your output bucket name>"
