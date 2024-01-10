@@ -5,7 +5,7 @@ This webapp allows users such as admin and bioinformaticians to operate AWS Heal
 ## Architecture overview
 
 ![Architecture overview](./images/architecture-overview.png)
-You can create new workflow, execute a run command and visualize the job status related to AWS HealthOmics in the webapp. The webapp contains the features in the following pages. As default, the `admin` and `bioinformaticia` groups are created by this app.
+You can create new workflow, execute a run command and visualize the job status related to AWS HealthOmics in the webapp. The webapp contains the features in the following pages. As default, the `admin` and `bioinformatician` groups are created by this app.
 
 ### Dashboard
 
