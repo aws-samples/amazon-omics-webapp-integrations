@@ -124,7 +124,7 @@ export class Web extends Construct {
       })
     );
 
-    // Nextjs deployment
+    // Deployment
     new aws_s3_deployment.BucketDeployment(this, 'bucketDeployment', {
       sources: [aws_s3_deployment.Source.asset(props.websiteFolder)],
       destinationBucket: origin,
