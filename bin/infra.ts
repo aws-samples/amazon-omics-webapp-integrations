@@ -1,34 +1,21 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
 import { AwsSolutionsChecks, NagSuppressions } from 'cdk-nag';
-import { ApplicationStack } from '../lib/application-stack';
-import { DefaultStackSynthesizer } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
-type Env = {
-  account: string;
-  region: string;
-};
+import { ApplicationStack } from '../lib/application-stack';
+import { config } from '../utils/utils';
 
 const app = new cdk.App();
 const stage = app.node.tryGetContext('stage');
 const baseConfg = app.node.tryGetContext('base');
 const context = app.node.tryGetContext(stage);
+const path = context.ssmPath;
+
 const tags = {
   environment: stage,
   appName: context.appName,
   stageAlias: context.alias,
-};
-
-export const config = (baseConfg: any) => {
-  const env: Env = {
-    account: '',
-    region: '',
-  };
-  env.account = baseConfg.deployAwsEnv.accountId || process.env.CDK_DEFAULT_ACCOUNT;
-  env.region =
-    baseConfg.deployAwsEnv.region || process.env.AWS_REGION || process.env.CDK_DEFAULT_REGION;
-  return env;
 };
 
 class InfraStack extends cdk.Stack {
@@ -62,8 +49,22 @@ class InfraStack extends cdk.Stack {
       true
     );
 
-    new cdk.CfnOutput(this, 'cognito_region', {
-      value: props?.env?.region as string,
+    // Store the parameters for webapp in SSM
+    new cdk.aws_ssm.StringParameter(this, 'userPoolId', {
+      parameterName: `${path}/${context.userPoolId}`,
+      stringValue: application.cognito.userPool.userPoolId,
+    });
+    new cdk.aws_ssm.StringParameter(this, 'IdentitiyPoolId', {
+      parameterName: `${path}/${context.identityPoolId}`,
+      stringValue: application.cognito.identityPool.ref || '',
+    });
+    new cdk.aws_ssm.StringParameter(this, 'UserPoolClientId', {
+      parameterName: `${path}/${context.userPoolClientId}`,
+      stringValue: application.cognito.webappClient.userPoolClientId,
+    });
+    new cdk.aws_ssm.StringParameter(this, 'GraphQLUrl', {
+      parameterName: `${path}/${context.graphqlUrl}`,
+      stringValue: application.graphqlApi.api.graphqlUrl,
     });
 
     new cdk.CfnOutput(this, 'user-pool-client-id', {
@@ -78,9 +79,6 @@ class InfraStack extends cdk.Stack {
       value: application.cognito.userPool.userPoolId,
     });
 
-    new cdk.CfnOutput(this, 'cognito-url', {
-      value: application.cognito.userPool.userPoolProviderUrl,
-    });
     new cdk.CfnOutput(this, 'graphql-url', {
       value: application.graphqlApi.api.graphqlUrl,
     });
@@ -90,9 +88,6 @@ class InfraStack extends cdk.Stack {
 cdk.Aspects.of(app).add(new AwsSolutionsChecks({ verbose: false }));
 
 new InfraStack(app, `${context.alias}-${stage}-${context.appName}-infraStack`, {
-  env: config(baseConfg),
+  env: config(baseConfg.deployAwsEnv),
   tags: tags,
-  // synthesizer: new DefaultStackSynthesizer({
-  //   qualifier: `${context.alias.slice(0, 5)}${stage.slice(0, 5)}`,
-  // }),
 });
