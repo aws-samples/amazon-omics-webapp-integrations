@@ -9,11 +9,12 @@
     "test": "jest",
     "cdk": "cdk",
     "prepare": "husky install",
-    "deployInfra": "cdk deploy --app 'npx ts-node --prefer-ts-exts bin/infra.ts' --outputs-file ./cdk-infra-outputs.json",
-    "buildWeb": "node buildWeb.mjs && cd ./webapp && npm install && npm run build ",
-    "deployFrontend": "cdk deploy --app 'npx ts-node --prefer-ts-exts bin/frontend.ts' --outputs-file ./cdk-frontend-outputs.json",
+    "deployInfra": "cdk deploy --app 'npx ts-node --prefer-ts-exts bin/infra.ts'",
+    "deployFrontend": "cdk deploy --app 'npx ts-node --prefer-ts-exts bin/frontend.ts'",
+    "deployAll": "npm run deployInfra && npm run deployFrontend",
     "destroyInfra": "cdk destroy --app 'npx ts-node --prefer-ts-exts bin/infra.ts' --force",
-    "destroyFrontend": "cdk destroy --app 'npx ts-node --prefer-ts-exts bin/frontend.ts' --force"
+    "destroyFrontend": "cdk destroy --app 'npx ts-node --prefer-ts-exts bin/frontend.ts' --force",
+    "destroyAll": "npm run destroyFrontend && npm run destroyInfra"
   },
   "husky": {
     "hooks": {
@@ -28,6 +29,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-ssm": "^3.490.0",
+    "@aws-sdk/credential-providers": "^3.490.0",
     "aws-cdk-lib": "^2.80.0",
     "cdk-nag": "^2.23.5",
     "constructs": "^10.0.0",

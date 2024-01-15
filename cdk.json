@@ -3,6 +3,7 @@
   "app": "npx ts-node --prefer-ts-exts bin/infra.ts",
   "toolkitStackName": "omics-app",
   "requireApproval": "never",
+  "profile": "<Your AWS profile>",
   "watch": {
     "include": ["**"],
     "exclude": [
@@ -40,7 +41,8 @@
     "@aws-cdk/customresources:installLatestAwsSdkDefault": false,
     "stage": "dev",
     "base": {
-      "deployAwsEnv": {}
+      "deployAwsEnv": {},
+      "awsProfile": "<Your AWS profile>"
     },
     "dev": {
       "appName": "omics-app",
@@ -50,7 +52,13 @@
       "omicsBuckets": {
         "input": "<Your input bucket name>",
         "output": "<Your output bucket name>"
-      }
+      },
+      "ssmPath": "/omics",
+      "userPoolId": "userPoolId",
+      "identityPoolId": "identityPoolId",
+      "userPoolClientId": "userPoolClientId",
+      "functionUrl": "functionUrl",
+      "graphqlUrl": "graphqlUrl"
     },
     "prod": {}
   }

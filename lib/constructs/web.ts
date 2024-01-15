@@ -14,12 +14,19 @@ import {
   aws_iam,
   aws_cloudfront_origins,
   aws_certificatemanager,
+  DockerImage,
 } from 'aws-cdk-lib';
-import { BlockPublicAccess, BucketEncryption } from 'aws-cdk-lib/aws-s3';
+import * as fs from 'fs';
 import { NagSuppressions } from 'cdk-nag';
+import { execSync } from 'child_process';
 export interface WebProps extends StackProps {
   readonly indexDoc: string;
   readonly errorDoc?: string;
+  readonly backendRegion: string;
+  readonly userPoolId: string;
+  readonly identityPoolId: string;
+  readonly userPoolClientId: string;
+  readonly graphqlUrl: string;
   readonly websiteFolder: string;
   readonly certificateARN?: string;
   readonly role?: aws_iam.Role;
@@ -32,10 +39,19 @@ export class Web extends Construct {
   constructor(scope: Construct, id: string, props: WebProps) {
     super(scope, id);
 
+    const {
+      backendRegion,
+      userPoolId,
+      identityPoolId,
+      userPoolClientId,
+      graphqlUrl,
+      websiteFolder,
+    } = props;
+
     // Access logs bucket
     const accessLoggingBucket = new aws_s3.Bucket(this, 'OriginAccessLoggingBucket', {
-      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-      encryption: BucketEncryption.S3_MANAGED,
+      blockPublicAccess: aws_s3.BlockPublicAccess.BLOCK_ALL,
+      encryption: aws_s3.BucketEncryption.S3_MANAGED,
       enforceSSL: true,
       autoDeleteObjects: true,
       removalPolicy: RemovalPolicy.DESTROY,
@@ -44,8 +60,8 @@ export class Web extends Construct {
 
     // Origin bucket
     const origin = new aws_s3.Bucket(this, 'Origin', {
-      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-      encryption: BucketEncryption.S3_MANAGED,
+      blockPublicAccess: aws_s3.BlockPublicAccess.BLOCK_ALL,
+      encryption: aws_s3.BucketEncryption.S3_MANAGED,
       enforceSSL: true,
       autoDeleteObjects: true,
       removalPolicy: RemovalPolicy.DESTROY,
@@ -73,8 +89,8 @@ export class Web extends Construct {
       minimumProtocolVersion: aws_cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
       enableLogging: true,
       logBucket: new aws_s3.Bucket(this, 'CloudFrontLoggingBucket', {
-        blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-        encryption: BucketEncryption.S3_MANAGED,
+        blockPublicAccess: aws_s3.BlockPublicAccess.BLOCK_ALL,
+        encryption: aws_s3.BucketEncryption.S3_MANAGED,
         enforceSSL: true,
         autoDeleteObjects: true,
         removalPolicy: RemovalPolicy.DESTROY,
@@ -126,11 +142,33 @@ export class Web extends Construct {
 
     // Deployment
     new aws_s3_deployment.BucketDeployment(this, 'bucketDeployment', {
-      sources: [aws_s3_deployment.Source.asset(props.websiteFolder)],
       destinationBucket: origin,
       distribution: cloudFrontWebDistribution,
-      distributionPaths: ['/', `/${props.indexDoc}`],
       role: bucketDeploymentRole,
+      sources: [
+        aws_s3_deployment.Source.asset(websiteFolder, {
+          bundling: {
+            image: DockerImage.fromRegistry('node:lts'),
+            local: {
+              tryBundle(outputDir: string) {
+                try {
+                  execSync('npm --version');
+                } catch (error) {
+                  return false;
+                }
+                execSync(
+                  `cd ${websiteFolder} && echo "VITE_COGNITO_WEBCLIENTID = ${userPoolClientId}\nVITE_COGNITO_USERPOOLID = ${userPoolId}\nVITE_COGNITO_IDENTITYPOOLID = ${identityPoolId}\nVITE_COGNITO_REGION = ${backendRegion}\nVITE_GRAPHQL_URL = ${graphqlUrl}" > .env && npm i && npm run build`
+                );
+                fs.cpSync(`${websiteFolder}/dist/spa`, outputDir, {
+                  recursive: true,
+                });
+                return true;
+              },
+            },
+          },
+        }),
+      ],
+      memoryLimit: 512,
     });
 
     // Suppressions
