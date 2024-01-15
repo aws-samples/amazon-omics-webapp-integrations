@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
-import { AwsSolutionsChecks, NagSuppressions } from 'cdk-nag';
+import { AwsSolutionsChecks } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { SSMClient, GetParametersByPathCommand, Parameter } from '@aws-sdk/client-ssm';
 import { fromIni } from '@aws-sdk/credential-providers';
