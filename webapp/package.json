@@ -2,7 +2,7 @@
   "name": "webapp",
   "version": "0.0.1",
   "description": "A Quasar Project",
-  "productName": "Amazon Omics WebApp",
+  "productName": "AWS HealthOmics WebApp",
   "private": true,
   "scripts": {
     "dev": "quasar dev",
@@ -20,8 +20,13 @@
     "@urql/exchange-auth": "^1.0.0",
     "@urql/vue": "^1.0.4",
     "apexcharts": "^3.37.0",
+<<<<<<< HEAD
     "aws-amplify": "^5.3.10",
     "graphql": "^16.8.1",
+=======
+    "aws-amplify": "^5.3.12",
+    "graphql": "^16.6.0",
+>>>>>>> main
     "lodash": "^4.17.21",
     "path": "^0.12.7",
     "pinia": "^2.0.31",

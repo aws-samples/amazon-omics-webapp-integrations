@@ -1,4 +1,4 @@
-# Amazon Omics Web App (webapp)
+# AWS HealthOmics Web App (webapp)
 
 ## Install the dependencies
 

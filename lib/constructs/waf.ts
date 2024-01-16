@@ -1,16 +1,17 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * SPDX-License-Identifier: LicenseRef-.amazon.com.-AmznSL-1.0
- * Licensed under the Amazon Software License  http://aws.amazon.com/asl/
+ *  Copyright 2024 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *  SPDX-License-Identifier: LicenseRef-.amazon.com.-AmznSL-1.0
+ *  Licensed under the Amazon Software License  http://aws.amazon.com/asl/
  */
+
+import { concat, isEmpty, uniqBy } from 'lodash';
 
 import * as cdk from 'aws-cdk-lib';
 import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 
 import { Construct } from 'constructs';
-import { isEmpty } from 'lodash';
 
-interface WafRule {
+export interface WafRule {
   name: string;
   rule: wafv2.CfnWebACL.RuleProperty;
 }
@@ -23,6 +24,7 @@ export class Waf extends Construct {
     props: {
       useCloudFront?: boolean;
       webACLResourceArn?: string;
+      extraRules?: Array<WafRule>;
       allowedIps: Array<string>;
     }
   ) {
@@ -41,7 +43,8 @@ export class Waf extends Construct {
       });
     }
 
-    this.waf = new WAF(this, `${id}-WAFv2`, ipset, distScope);
+    // AWS WAF
+    this.waf = new WAF(this, `${id}-WAFv2`, ipset, distScope, props.extraRules);
 
     if (!props.useCloudFront && props.webACLResourceArn) {
       // Create an association, not needed for cloudfront
@@ -53,16 +56,17 @@ export class Waf extends Construct {
   }
 }
 
-const awsManagedRules: WafRule[] = [
+// AWS WAF rules
+let wafRules: WafRule[] = [
   // Rate Filter
   {
-    name: 'Web-Rate-Filter',
+    name: 'web-rate-filter',
     rule: {
-      name: 'Web-Rate-Filter',
-      priority: 0,
+      name: 'web-rate-filter',
+      priority: 100,
       statement: {
         rateBasedStatement: {
-          limit: 1000,
+          limit: 3000,
           aggregateKeyType: 'IP',
         },
       },
@@ -72,7 +76,7 @@ const awsManagedRules: WafRule[] = [
       visibilityConfig: {
         sampledRequestsEnabled: true,
         cloudWatchMetricsEnabled: true,
-        metricName: 'Web-Rate-Filter',
+        metricName: 'web-rate-filter',
       },
     },
   },
@@ -81,7 +85,7 @@ const awsManagedRules: WafRule[] = [
     name: 'AWS-AWSManagedRulesAmazonIpReputationList',
     rule: {
       name: 'AWS-AWSManagedRulesAmazonIpReputationList',
-      priority: 10,
+      priority: 200,
       statement: {
         managedRuleGroupStatement: {
           vendorName: 'AWS',
@@ -103,14 +107,18 @@ const awsManagedRules: WafRule[] = [
     name: 'AWS-AWSManagedRulesCommonRuleSet',
     rule: {
       name: 'AWS-AWSManagedRulesCommonRuleSet',
-      priority: 20,
+      priority: 300,
       statement: {
         managedRuleGroupStatement: {
           vendorName: 'AWS',
           name: 'AWSManagedRulesCommonRuleSet',
           // Excluding generic RFI body rule for sns notifications
           // https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-list.html
-          excludedRules: [{ name: 'GenericRFI_BODY' }, { name: 'SizeRestrictions_BODY' }],
+          excludedRules: [
+            { name: 'GenericRFI_BODY' },
+            { name: 'SizeRestrictions_BODY' },
+            { name: 'CrossSiteScripting_BODY' },
+          ],
         },
       },
       overrideAction: {
@@ -127,7 +135,7 @@ const awsManagedRules: WafRule[] = [
     name: 'AWS-AWSManagedRulesKnownBadInputsRuleSet',
     rule: {
       name: 'AWS-AWSManagedRulesKnownBadInputsRuleSet',
-      priority: 30,
+      priority: 400,
       statement: {
         managedRuleGroupStatement: {
           vendorName: 'AWS',
@@ -144,6 +152,27 @@ const awsManagedRules: WafRule[] = [
       },
     },
   },
+  {
+    name: 'AWS-AWSManagedRulesSQLiRuleSet',
+    rule: {
+      name: 'AWS-AWSManagedRulesSQLiRuleSet',
+      priority: 500,
+      statement: {
+        managedRuleGroupStatement: {
+          vendorName: 'AWS',
+          name: 'AWSManagedRulesSQLiRuleSet',
+        },
+      },
+      overrideAction: {
+        none: {},
+      },
+      visibilityConfig: {
+        sampledRequestsEnabled: true,
+        cloudWatchMetricsEnabled: true,
+        metricName: 'AWS-AWSManagedRulesSQLiRuleSet',
+      },
+    },
+  },
 ];
 
 export class WAF extends wafv2.CfnWebACL {
@@ -151,14 +180,18 @@ export class WAF extends wafv2.CfnWebACL {
     scope: Construct,
     id: string,
     ipset: cdk.aws_wafv2.CfnIPSet | null,
-    distScope: string
+    distScope: string,
+    extraRules?: Array<WafRule>
   ) {
+    if (extraRules && !isEmpty(extraRules)) {
+      wafRules = uniqBy(concat(wafRules, extraRules), 'name');
+    }
     if (ipset) {
-      awsManagedRules.push({
+      wafRules.push({
         name: 'custom-web-ipfilter',
         rule: {
           name: 'custom-web-ipfilter',
-          priority: 40,
+          priority: 600,
           statement: {
             notStatement: {
               statement: {
@@ -199,7 +232,7 @@ export class WAF extends wafv2.CfnWebACL {
       },
       scope: distScope,
       name: `${id}-waf`,
-      rules: awsManagedRules.map((wafRule) => wafRule.rule),
+      rules: wafRules.map((wafRule) => wafRule.rule),
     });
   }
 }
