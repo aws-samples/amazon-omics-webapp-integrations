@@ -1,5 +1,10 @@
 import { Context, Handler } from 'aws-lambda';
-import { OmicsClient, StartRunCommand, CreateWorkflowCommand } from '@aws-sdk/client-omics';
+import {
+  OmicsClient,
+  StartRunCommand,
+  CreateWorkflowCommand,
+  WorkflowEngine,
+} from '@aws-sdk/client-omics';
 import { forIn, isEmpty, assign } from 'lodash';
 
 interface StartRunCommandInput {
@@ -20,7 +25,7 @@ interface CreateWorkflowCommandInput {
   definitionUri?: string;
   definitionZip?: [number];
   description?: string;
-  engine?: string;
+  engine?: WorkflowEngine;
   main?: string;
   parameterTemplate?: ParamObject;
   requestId?: string;

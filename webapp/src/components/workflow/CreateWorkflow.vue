@@ -2,6 +2,7 @@
 import { Loading, useQuasar } from 'quasar';
 import { ref } from 'vue';
 import { useMutation } from '@urql/vue';
+import { WorkflowEngine } from '@aws-sdk/client-omics';
 import { useCreateWorkflowParamStore } from '../../stores/run-params-store';
 import { createWorkflowCommand } from '../../api/appsync/mutation';
 import { map, set } from 'lodash';
@@ -13,7 +14,7 @@ const step = ref(1);
 const done1 = ref(false);
 const done2 = ref(false);
 const storageCapacityList = [1.2, 2.4, 4.8, 7.2, 9.6];
-const workflowLangList = ['WDL', 'Nextflow'];
+const workflowLangList: WorkflowEngine[] = ['WDL', 'NEXTFLOW', 'CWL'];
 let storageCapacity = ref('');
 let workflowLang = ref('');
 const store = useCreateWorkflowParamStore();
