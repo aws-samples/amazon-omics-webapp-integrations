@@ -5,7 +5,7 @@ This webapp allows users such as admin and bioinformaticians to operate AWS Heal
 ## Architecture overview
 
 ![Architecture overview](./images/architecture-overview.png)
-You can create new workflow, execute a run command and visualize the job status related to AWS HealthOmics in the webapp. The webapp contains the features in the following pages. As default, the `admin` and `bioinformaticia` groups are created by this app.
+You can create new workflow, execute a run command and visualize the job status related to AWS HealthOmics in the webapp. The webapp contains the features in the following pages. As default, the `admin` and `bioinformatician` groups are created by this app.
 
 ### Dashboard
 
@@ -50,10 +50,15 @@ Only admin can access to this page and add new user or add a user to a group in 
 
 ## Configuration for the webapp
 
-Add your context parameters to `cdk.json` as follows, then run `npm run <cmd> -- --profile <your profile>`.
+Add your context parameters to `cdk.json` as follows, then run `npm run <cmd>`.
 
 ```json
+"profile": "<Your AWS profile>"  // Utilize the profile to deploy the stack by CDK
 "context": {
+    "base": {
+      "deployAwsEnv": {},
+      "awsProfile": "<Your AWS profile>" // Utilize the profile to get and put some parameters for SSM Parametor Store
+    },
     "stage": "dev",
     "dev": {
       "appName": "omics-app-dev", // Application name
@@ -84,15 +89,8 @@ Add your context parameters to `cdk.json` as follows, then run `npm run <cmd> --
 You can deploy the webpapp with only following three commands.
 
 ```bash
-# 1. Deploy the infrastructure stack with AWS CDK
-npm run deployInfra -- --profile <your profile>
-
-# 2. SPA building with Quasar
-npm run buildWeb
-
-# 3. Deploy the frontend stack with AWS CDK
-npm run deployFrontend -- --profile <your profile>
-
+# 1. Deploy the infrastructure and frontend stacks with AWS CDK
+npm run deployAll
 ```
 
 > ### Notice
@@ -100,36 +98,45 @@ npm run deployFrontend -- --profile <your profile>
 > Execute the `bootstarp` command as follows if you have never executed bootstrap command with CDK in your region.
 >
 > ```
-> npm run cdk bootstrap -- --profile <your profile>
+> npm run cdk bootstrap
 > ```
 
 ## Cleanup
 
 ```bash
-# 1. Destroy the frontend stack
-npm run destroyFrontend -- --profile <your profile>
-
-# 2. Destroy the infrastructure stack with AWS CDK
-npm run destroyInfra -- --profile <your profile>
-
+# 1. Destroy all stacks(the infrastructure and frontend stack) with AWS CDK
+npm run destroyAll
 ```
+
+> ### Notice
+>
+> The following destroy failures may occur because the files in your bucket cannot be emptied. If it occurred, please empty them from AWS Management Console and rerun the command
+>
+> ```
+> XXX was not successfully deleted: The following resource(s) failed to delete: [XXomicsappfrontendStackwebappspaCloudFrontLoggingB
+> ucketXX].
+> ```
 
 Also, delete your repositories in ECR if you need.
 
 ## Commands
 
-- `npm run deployInfra -- --profile <your profile>`
+- `npm run deployInfra`
+
   - Deploy the infrastructure stack with AWS CDK
-- `npm run buildWeb`
-  - SPA building with Quasar
-- `npm run deployFrontend -- --profile <your profile>`
+
+- `npm run deployFrontend`
 
   - Deploy the frontend stack with AWS CDK
 
-- `npm run destroyInfra -- --profile <your profile>`
+- `npm run deployAll`
+  - Deploy the infrastructure and frontend stacks with AWS CDK
+- `npm run destroyInfra`
   - Destroy the infrastructure stack with AWS CDK
-- `npm run destroyFrontend -- --profile <your profile>`
+- `npm run destroyFrontend`
   - Destroy the frontend stack with AWS CDK
+- `npm run destroyAll`
+  - Destroy all stacks(the infrastructure and frontend stack) with AWS CDK
 
 ## Security
 

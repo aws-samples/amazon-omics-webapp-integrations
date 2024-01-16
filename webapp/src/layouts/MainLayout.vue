@@ -70,7 +70,7 @@ const linkList = ref(lists);
         <q-avatar rounded size="60px">
           <img src="logo.png" />
         </q-avatar>
-        <q-toolbar-title> Amazon Omics app prototype </q-toolbar-title>
+        <q-toolbar-title> AWS HealthOmics App </q-toolbar-title>
         <div>{{ username }}</div>
         <q-btn icon="logout" :to="{ name: 'signout' }" />
       </q-toolbar>
