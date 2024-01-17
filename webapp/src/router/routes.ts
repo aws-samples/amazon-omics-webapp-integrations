@@ -29,6 +29,12 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, isAdmin: false },
       },
       {
+        path: '/ready2run',
+        name: 'ready2run',
+        component: () => import('pages/Ready2RunWorkflow.vue'),
+        meta: { requiresAuth: true, isAdmin: false },
+      },
+      {
         path: '/job',
         name: 'job',
         component: () => import('pages/Job.vue'),

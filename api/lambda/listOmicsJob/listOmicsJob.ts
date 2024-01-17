@@ -6,6 +6,7 @@ import {
   ListRunTasksCommand,
   GetRunCommand,
   GetWorkflowCommand,
+  WorkflowType,
 } from '@aws-sdk/client-omics';
 import { find } from 'lodash';
 
@@ -29,9 +30,13 @@ export const handler: Handler = async (event: any, context: Context) => {
   const client = new OmicsClient({
     region,
   });
-  const listWorkflow = async () => {
+  const listWorkflow = async (workflowType: WorkflowType) => {
     try {
-      const response = await client.send(new ListWorkflowsCommand({}));
+      const response = await client.send(
+        new ListWorkflowsCommand({
+          type: workflowType,
+        })
+      );
       return response.items;
     } catch (error) {
       console.error(error);
@@ -88,7 +93,7 @@ export const handler: Handler = async (event: any, context: Context) => {
   try {
     switch (event.field) {
       case 'getListWorkflow': {
-        const workflow = await listWorkflow();
+        const workflow = await listWorkflow(event.arguments.workflowType);
         console.log(workflow);
         return workflow;
       }

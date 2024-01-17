@@ -2,9 +2,8 @@
 import { Loading, useQuasar } from 'quasar';
 import { ref } from 'vue';
 import { useMutation } from '@urql/vue';
-import { WorkflowEngine } from '@aws-sdk/client-omics';
-import { useCreateWorkflowParamStore } from '../../stores/run-params-store';
-import { createWorkflowCommand } from '../../api/appsync/mutation';
+import { useCreateWorkflowParamStore } from '../../../stores/run-params-store';
+import { createWorkflowCommand } from '../../../api/appsync/mutation';
 import { map, set } from 'lodash';
 
 const $q = useQuasar();
@@ -14,7 +13,7 @@ const step = ref(1);
 const done1 = ref(false);
 const done2 = ref(false);
 const storageCapacityList = [1.2, 2.4, 4.8, 7.2, 9.6];
-const workflowLangList: WorkflowEngine[] = ['WDL', 'NEXTFLOW', 'CWL'];
+const workflowLangList = ['WDL', 'Nextflow'];
 let storageCapacity = ref('');
 let workflowLang = ref('');
 const store = useCreateWorkflowParamStore();
@@ -106,8 +105,8 @@ const changeDefinition = (event: any, index: any) => {
       active-color="blue"
       animated
     >
-      <q-step :name="1" title="Define workflow" icon="settings" :done="done1">
-        <p class="text-h4">Workflow Definition</p>
+      <q-step :name="1" title="Select workflow" icon="settings" :done="done1">
+        <p class="text-h4">Ready2RunWorkflow Definition</p>
         <div class="row q-gutter-sm q-py-sm">
           <q-input
             dark

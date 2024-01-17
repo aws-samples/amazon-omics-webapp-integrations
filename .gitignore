@@ -4,6 +4,7 @@ node_modules
 .vscode/
 .eslintcache
 docs/.$*
+sample.cdk.json
 
 # CDK asset staging directory
 .cdk.staging

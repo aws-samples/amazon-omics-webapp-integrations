@@ -25,9 +25,21 @@ const lists = computed(() => {
     },
     {
       title: 'Workflow',
-      caption: 'Create Workflow',
       icon: 'account_tree',
-      link: 'workflow',
+      nest: [
+        {
+          title: 'PrivateWorkflow',
+          caption: 'Create Workflow',
+          icon: 'account_tree',
+          link: 'workflow',
+        },
+        {
+          title: 'Ready2Run',
+          caption: 'Run Ready2Run Workflow',
+          icon: 'account_tree',
+          link: 'ready2run',
+        },
+      ],
     },
     {
       title: 'Job',
@@ -78,8 +90,6 @@ const linkList = ref(lists);
 
     <q-drawer v-model="drawer" show-if-above :width="200" :breakpoint="500">
       <q-list class="q-py-sm">
-        <!-- <q-item-label header> Genomics on AWS </q-item-label> -->
-
         <NavigationLink
           v-for="link in linkList"
           :key="link.title"

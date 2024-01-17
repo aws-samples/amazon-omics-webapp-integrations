@@ -76,7 +76,17 @@ export const getRunTasksTimeStatus = /* GraphQL */ `
 `;
 
 export const getListWorkflowId = /* GraphQL */ `
-  query getListWorkflowId {
+  query getListWorkflowId($workflowType: String!) {
+    getListWorkflow(workflowType: $workflowType) {
+      id
+      name
+      status
+    }
+  }
+`;
+
+export const getListReady2RunWorkflow = /* GraphQL */ `
+  query getListReady2RunWorkflow {
     getListWorkflow {
       id
       name
