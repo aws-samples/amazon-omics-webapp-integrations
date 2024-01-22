@@ -76,6 +76,7 @@ const getSeries = computed(() => {
 });
 let series = ref(getSeries);
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const updateSeries = (data: any) => {
   let res = [];
   has(data, 'COMPLETED') ? res.push(get(data, 'COMPLETED')) : res.push(0);
@@ -91,6 +92,7 @@ const getStatusCount = () => {
   const result = get(response, 'data.value.getListRunCommand', []);
   if (isEmpty(result)) return [];
   let statusArray: string[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   result.map((data: any) => {
     const status = get(data, 'status');
     statusArray.push(status);

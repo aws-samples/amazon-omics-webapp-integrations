@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import CreateWorkflow from '../components/workflow/private/CreateWorkflow.vue';
+import CreateWorkflow from '../components/workflow/ready2run/CreateWorkflow.vue';
 </script>
 
 <template>

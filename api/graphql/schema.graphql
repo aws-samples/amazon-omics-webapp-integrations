@@ -18,7 +18,17 @@ type OmicsListWorkflow @aws_cognito_user_pools(cognito_groups: ["admin", "bioinf
   status: String
   digest: String
   arn: String
+  workflowType: String
   workflowId: String
+  metadata: OmicsListWorkflowMetadata
+}
+
+type OmicsListWorkflowMetadata
+  @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"]) {
+  licensed: String
+  publisher: String
+  estimatedDuration: String
+  version: String
 }
 
 type OmicsListRunTasks @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"]) {
@@ -94,6 +104,18 @@ type OmicsGetWorkflowCommand
   status: String
   tags: String
   type: String
+  metadata: OmicsGetWorkflowMetadata
+}
+
+type OmicsGetWorkflowMetadata
+  @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"]) {
+  licensed: String
+  software: String
+  publisher: String
+  estimatedDuration: String
+  version: String
+  maxDuration: String
+  maxInputSize: String
 }
 
 type OmicsCreateWorkflowCommandOutput
@@ -139,7 +161,7 @@ input OmicsStartRunCommandInput {
   name: String!
   outputUri: String!
   parameters: AWSJSON
-  priority: String
+  priority: Float
   requestId: String
   runId: String
   storageCapacity: Float
@@ -177,7 +199,7 @@ input CreateRepositoryCommandInput {
 ############################### Queries ###############################
 type Query {
   # ListWorkflow
-  getListWorkflow(name: String, type: String): [OmicsListWorkflow]
+  getListWorkflow(workflowType: String): [OmicsListWorkflow]
     @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"])
   # ListRunCommand
   getListRunCommand: [OmicsListRunCommand]
@@ -192,7 +214,7 @@ type Query {
   getRunCommand(id: String!): OmicsGetRunCommandOutput
     @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"])
   # GetWorkflowCommand
-  getWorkflowCommand(id: String!): OmicsGetWorkflowCommand
+  getWorkflowCommand(id: String!, workflowType: String): OmicsGetWorkflowCommand
     @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"])
   # DescribeRepositoriesCommand
   describeRepositoriesCommand: DescribeRepositoriesCommandOutput

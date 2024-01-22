@@ -20,6 +20,9 @@ const startRunCommandResult = useMutation(startRunCommand);
 let response: UseQueryResponse<unknown, object>;
 response = useQuery({
   query: workflowQuery,
+  variables: {
+    workflowType: 'PRIVATE',
+  },
 });
 
 const model = ref(null);
@@ -47,25 +50,31 @@ const showLoading = async () => {
     ...basicData.value.items,
     parameters: transformedAwsJson,
   };
-  const result = await startRunCommandResult.executeMutation({
-    OmicsStartRunCommandInput: input,
-  });
+  try {
+    const result = await startRunCommandResult.executeMutation({
+      OmicsStartRunCommandInput: input,
+    });
 
-  if (result.data.startRunCommand.status !== null) {
-    toast('Success', 'green');
+    if (result.data.startRunCommand.status !== null) {
+      toast('Success', 'green');
+      Loading.hide();
+      store.updateDataState({});
+      store.updateParamsState({});
+      done3.value = true;
+      onReset();
+      done1.value = false;
+      step.value = 1;
+    } else {
+      toast('Error', 'red');
+      store.updateDataState({});
+      store.updateParamsState({});
+      Loading.hide();
+      onReset();
+      step.value = 2;
+    }
+  } catch (error) {
+    toast(error.message, 'red');
     Loading.hide();
-    store.updateDataState({});
-    store.updateParamsState({});
-    done3.value = true;
-    onReset();
-    done1.value = false;
-    step.value = 1;
-  } else {
-    toast('Error', 'red');
-    store.updateDataState({});
-    store.updateParamsState({});
-    Loading.hide();
-    onReset();
     step.value = 2;
   }
 };
