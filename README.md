@@ -20,8 +20,15 @@ You can create new repository in Amazon ECR.
 
 ### Workflow
 
-![Workflow](./images/workflow.png)
-You can create new workflow in AWS HealthOmics
+#### Private workflow
+
+![Workflow](./images/privateWorkflow.png)
+You can create new private workflow in AWS HealthOmics
+
+#### Ready2Run workflow
+
+![Ready2Run](./images/ready2run.png)
+You can see the list of Ready2Run workflows, and run the selected workflow.
 
 ### Job
 

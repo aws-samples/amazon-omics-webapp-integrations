@@ -3,8 +3,8 @@ import { Loading, useQuasar } from 'quasar';
 import { ref } from 'vue';
 import { useMutation } from '@urql/vue';
 import { WorkflowEngine } from '@aws-sdk/client-omics';
-import { useCreateWorkflowParamStore } from '../../stores/run-params-store';
-import { createWorkflowCommand } from '../../api/appsync/mutation';
+import { useCreateWorkflowParamStore } from '../../../stores/run-params-store';
+import { createWorkflowCommand } from '../../../api/appsync/mutation';
 import { map, set } from 'lodash';
 
 const $q = useQuasar();
