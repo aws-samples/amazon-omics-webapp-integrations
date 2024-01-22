@@ -22,7 +22,6 @@ const getColumns = computed(() => {
   if (isEmpty(data)) return [];
 
   if (data && isArray(data)) {
-    console.log(data);
     const responseColumns = Object.keys(first(data));
     const columns: Array<QTableColumn> = [];
     responseColumns.forEach((c) => {
