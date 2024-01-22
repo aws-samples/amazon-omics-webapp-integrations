@@ -1,6 +1,6 @@
 <template>
   <div v-if="!nest">
-    <q-item clickable :to="link" v-ripple>
+    <q-item clickable :to="link" v-ripple active-class="menu-link">
       <q-item-section v-if="icon" avatar>
         <q-icon :name="icon" />
       </q-item-section>
@@ -24,6 +24,7 @@
         clickable
         :to="workflow.link"
         v-ripple
+        active-class="menu-link"
       >
         <q-item-section>
           <q-item-label>{{ workflow.title }}</q-item-label>
@@ -34,6 +35,11 @@
   </div>
 </template>
 
+<style lang="sass">
+.menu-link
+  color: $light-blue-12
+  background: $indigo-10
+</style>
 <script lang="ts">
 import { defineComponent } from 'vue';
 
