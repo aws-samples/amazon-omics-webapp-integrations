@@ -3,7 +3,7 @@
   "app": "npx ts-node --prefer-ts-exts bin/infra.ts",
   "toolkitStackName": "omics-app",
   "requireApproval": "never",
-  "profile": "proto-dev-us",
+  "profile": "<Your AWS profile>",
   "watch": {
     "include": ["**"],
     "exclude": [
@@ -42,16 +42,16 @@
     "stage": "dev",
     "base": {
       "deployAwsEnv": {},
-      "awsProfile": "proto-dev-us"
+      "awsProfile": "<Your AWS profile>"
     },
     "dev": {
       "appName": "omics-app",
       "alias": "japan-hcls",
-      "appAdminEmail": "hkoizum@amazon.co.jp",
-      "allowedIps": ["27.0.3.0/24"],
+      "appAdminEmail": "<Your admin email address>",
+      "allowedIps": ["<Allowed CIDR>"],
       "omicsBuckets": {
-        "input": "230330omics-hcls",
-        "output": "omics-ws-hkoizum"
+        "input": "<Your input bucket name>",
+        "output": "<Your output bucket name>"
       },
       "ssmPath": "/omics",
       "userPoolId": "userPoolId",
