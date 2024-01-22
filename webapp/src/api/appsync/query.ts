@@ -47,9 +47,10 @@ export const getRunCommand = /* GraphQL */ `
     }
   }
 `;
+
 export const getWorkflowCommand = /* GraphQL */ `
-  query getWorkflowCommand($id: String!) {
-    getWorkflowCommand(id: $id) {
+  query getWorkflowCommand($id: String!, $workflowType: String!) {
+    getWorkflowCommand(id: $id, workflowType: $workflowType) {
       definition
       description
       engine
@@ -60,6 +61,15 @@ export const getWorkflowCommand = /* GraphQL */ `
       storageCapacity
       status
       type
+      metadata {
+        estimatedDuration
+        licensed
+        maxInputSize
+        software
+        maxDuration
+        publisher
+        version
+      }
     }
   }
 `;
@@ -86,11 +96,16 @@ export const getListWorkflowId = /* GraphQL */ `
 `;
 
 export const getListReady2RunWorkflow = /* GraphQL */ `
-  query getListReady2RunWorkflow {
-    getListWorkflow {
+  query getListReady2RunWorkflow($workflowType: String!) {
+    getListWorkflow(workflowType: $workflowType) {
       id
       name
       status
+      metadata {
+        publisher
+        estimatedDuration
+        version
+      }
     }
   }
 `;

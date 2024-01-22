@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, reactive, defineProps } from 'vue';
+import { computed, ref, reactive } from 'vue';
 import { getRunTasksTimeStatus } from '../../api/appsync/query';
 import { useQuery, UseQueryResponse } from '@urql/vue';
 import { get, isEmpty, sortBy, map, filter } from 'lodash';
@@ -52,6 +52,7 @@ const variables = computed(() => {
   return params;
 });
 let response: UseQueryResponse<unknown, object>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let series: any;
 
 const getData = computed(() => {
@@ -69,6 +70,7 @@ const getData = computed(() => {
   if (isEmpty(result)) return [];
   const filterResult = filter(result, { status: 'COMPLETED' });
   const sortedResult = sortBy(filterResult, 'startTime');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data = map(sortedResult, (r: any) => {
     const startTime = new Date(
       new Date(r.startTime).toLocaleString()

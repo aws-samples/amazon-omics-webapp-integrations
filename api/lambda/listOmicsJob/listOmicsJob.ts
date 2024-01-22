@@ -78,11 +78,12 @@ export const handler: Handler = async (event: any, context: Context) => {
       console.log(error);
     }
   };
-  const getWorkflowCommand = async (id: string) => {
+  const getWorkflowCommand = async (id: string, workflowType: string) => {
     try {
       const response = await client.send(
         new GetWorkflowCommand({
           id,
+          type: workflowType,
         })
       );
       return response;
@@ -111,7 +112,10 @@ export const handler: Handler = async (event: any, context: Context) => {
       }
 
       case 'getWorkflowCommand': {
-        const getWorkflowCommandOutputs = await getWorkflowCommand(event.arguments.id);
+        const getWorkflowCommandOutputs = await getWorkflowCommand(
+          event.arguments.id,
+          event.arguments.workflowType
+        );
         console.log(getWorkflowCommandOutputs);
         return getWorkflowCommandOutputs;
       }

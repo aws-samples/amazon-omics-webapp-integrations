@@ -30,7 +30,7 @@ const storageCapacity = ref('');
 const store = useRunParamStore();
 const query = ref(getWorkflowCommand);
 const variables = computed(() => {
-  const params = { id: id.value };
+  const params = { id: id.value, workflowType: 'PRIVATE' };
   return params;
 });
 
@@ -91,6 +91,7 @@ const file = ref(null);
 const data = ref(getData);
 let parameters = ref(getParameters);
 const changeBasicValue = (event: any, index: any) => {
+  if (index === 'priority') event = Number(event);
   set(store.data, index, event);
 };
 const changeValue = (event: any, index: any) => {
@@ -139,7 +140,8 @@ const getFileData = (file: File) => {
       />
       <q-input
         dark
-        v-model="data.priority"
+        type="number"
+        v-model.number="data.priority"
         label="Priority"
         :readonly="readonly"
         :disable="disable"

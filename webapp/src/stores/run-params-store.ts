@@ -55,3 +55,34 @@ export const useCreateWorkflowParamStore = defineStore('workflow-params', {
     },
   },
 });
+
+export const useReady2RunParamStore = defineStore('workflow-params', {
+  state: () => ({
+    data: {
+      workflowId: '',
+      outputUri: '',
+      name: '',
+      storageCapacity: 1.2,
+      priority: 100,
+    },
+    parameters: {},
+  }),
+
+  getters: {
+    getDataState(state) {
+      return state.data;
+    },
+    getParamsState(state) {
+      return state.parameters;
+    },
+  },
+
+  actions: {
+    updateDataState(props: any) {
+      this.data = props;
+    },
+    updateParamsState(props: any) {
+      this.parameters = props;
+    },
+  },
+});
