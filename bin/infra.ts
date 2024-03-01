@@ -45,6 +45,10 @@ class InfraStack extends cdk.Stack {
             'Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
           ],
         },
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Creating the policy for lambda automatically by CDK',
+        },
       ],
       true
     );

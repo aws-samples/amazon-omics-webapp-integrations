@@ -93,10 +93,16 @@ Add your context parameters to `cdk.json` as follows, then run `npm run <cmd>`.
 
 ## Deployment
 
-You can deploy the webpapp with only following three commands.
+1. Install the dependencies
 
-```bash
-# 1. Deploy the infrastructure and frontend stacks with AWS CDK
+```zsh
+npm ci
+```
+
+2. Deploy AWS resources
+
+```zsh
+# Deploy the infrastructure and frontend stacks with AWS CDK
 npm run deployAll
 ```
 
@@ -111,7 +117,7 @@ npm run deployAll
 ## Cleanup
 
 ```bash
-# 1. Destroy all stacks(the infrastructure and frontend stack) with AWS CDK
+# Destroy all stacks(the infrastructure and frontend stack) with AWS CDK
 npm run destroyAll
 ```
 

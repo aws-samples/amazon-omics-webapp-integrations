@@ -141,7 +141,7 @@ export class Web extends Construct {
     );
 
     // Deployment
-    new aws_s3_deployment.BucketDeployment(this, 'bucketDeployment', {
+    const bucketDeployment = new aws_s3_deployment.BucketDeployment(this, 'bucketDeployment', {
       destinationBucket: origin,
       distribution: cloudFrontWebDistribution,
       role: bucketDeploymentRole,
