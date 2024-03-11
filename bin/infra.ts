@@ -94,4 +94,5 @@ cdk.Aspects.of(app).add(new AwsSolutionsChecks({ verbose: false }));
 new InfraStack(app, `${context.alias}-${stage}-${context.appName}-infraStack`, {
   env: config(baseConfg.deployAwsEnv),
   tags: tags,
+  description: 'InfraStack for AWS HealthOmics integration (uksb-1tupboc60).',
 });

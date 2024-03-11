@@ -115,6 +115,7 @@ const createFrontend = async () => {
     websiteFolder: './webapp/',
     env: config({ region: 'us-east-1' }), // WAFv2 is available only in us-east-1
     tags: tags,
+    description: 'FrontendStack for AWS HealthOmics integration (uksb-1tupboc60).',
   });
 };
 
