@@ -19,7 +19,7 @@ const lists = computed(() => {
     },
     {
       title: 'Repository',
-      caption: 'Creae repository in ECR',
+      caption: 'Create repository in ECR',
       icon: 'calendar_view_week',
       link: 'repository',
     },

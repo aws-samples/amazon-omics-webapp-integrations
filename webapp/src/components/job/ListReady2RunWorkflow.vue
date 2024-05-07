@@ -85,7 +85,7 @@ const onRefresh = async () => {
 <template>
   <div>
     <q-table
-      title="Ready2Workflow List"
+      title="Ready2Run Workflow List"
       title-class="text-h5 text-bold text-grey"
       row-key="name"
       :rows="tableRows"
