@@ -1,6 +1,6 @@
 type OmicsListRunCommand @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"]) {
-  name: String!
-  id: String
+  name: String
+  id: String!
   arn: String
   creationTime: AWSDateTime
   priority: String
@@ -43,8 +43,8 @@ type OmicsListRunTasks @aws_cognito_user_pools(cognito_groups: ["admin", "bioinf
 }
 
 type OmicsListRunDetails @aws_cognito_user_pools(cognito_groups: ["admin", "bioinformatician"]) {
-  name: String!
-  id: String
+  name: String
+  id: String!
   arn: String
   creationTime: AWSDateTime
   priority: String
