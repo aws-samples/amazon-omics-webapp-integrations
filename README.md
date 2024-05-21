@@ -57,6 +57,10 @@ Only admin can access to this page and add new user or add a user to a group in 
 
 ## Webapp configuration
 
+### Add your aws profile in `cdk.json`
+
+To deploy the web app with AWS CDK, need to add your aws profile to `profile` in `cdk.json`.
+
 ### Create a config file as `config.ts`
 
 Copy `config.sample.ts` and paste the file as `config.ts`. Then modify the `baseConfig` properties as your enviroment and requirements. For the reference, `baseConfig` in the sample file as follows:
