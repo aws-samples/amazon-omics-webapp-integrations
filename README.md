@@ -55,41 +55,33 @@ Only admin can access to this page and add new user or add a user to a group in 
 >
 > Cross region imports are not supported in AWS HealthOmics at this moment. If you want to use the sample data in [the AWS HealthOmics - End to End environment](https://github.com/aws-samples/amazon-omics-end-to-end-genomics) for the webapp and deploy the webapp in another supported region outside of us-east-1, copy the example data to your input bucket in that region.
 
-## Configuration for the webapp
+## Setup
 
-Add your context parameters to `cdk.json` as follows, then run `npm run <cmd>`.
+### Create a config file as `config.ts`
 
-```json
-"profile": "<Your AWS profile>"  // Utilize the profile to deploy the stack by CDK
-"context": {
-    "base": {
-      "deployAwsEnv": {},
-      "awsProfile": "<Your AWS profile>" // Utilize the profile to get and put some parameters for SSM Parametor Store
-    },
-    "stage": "dev",
-    "dev": {
-      "appName": "omics-app-dev", // Application name
-      "alias": "japan-hcls", // Your alias
-      "appAdminEmail": "<Your admin email address>", // Admin email address for Cognito
-      "allowedIps": ["<Allowed CIDR>"], // Allowed CIDR list to access CloudFront with WAF
-      "omicsBuckets": {
-        "input": "<Your input bucket name>",  // Your input bucket for Omics
-        "output": "<Your output bucket name>" // Your output bucket for Omics
-      }
-    },
-    "prod": {
-      "appName": "omics-app-prod",
-      "alias": "admin",
-      "appAdminEmail": "<Your admin email address>",
-      "allowedIps": ["<Allowed CIDR>"],
-      "omicsBuckets": {
-        "input": "<Your input bucket name>",
-        "output": "<Your output bucket name>"
-      }
-    }
-  }
+Copy `config.sample.ts` and paste the file as `config.ts`. Then modify the `baseConfig` properties as your enviroment and requirements. For the reference, `baseConfig` in the sample file as follows:
 
+```ts
+const baseConfig = {
+  appName: 'omics-app',
+  alias: 'japan-hcls',
+  awsProfile: 'your_profile',
+  adminEmail: 'your_email@acme.com',
+  allowedIps: ['27.0.3.0/24'],
+  ssmPath: '/omics',
+  userPoolId: 'userPoolId',
+  identityPoolId: 'identityPoolId',
+  userPoolClientId: 'userPoolClientId',
+  functionUrl: 'functionUrl',
+  graphqlUrl: 'graphqlUrl',
+  omicsBuckets: {
+    input: 'InputBucketName',
+    output: 'outputBucketName',
+  },
+};
 ```
+
+See the [config doc](docs/config.md) if you check the properties in detail.
 
 ## Deployment
 
