@@ -7,7 +7,7 @@ import { fromIni } from '@aws-sdk/credential-providers';
 import { find } from 'lodash';
 
 import { WebAppStack } from '../lib/webapp-stack';
-import { config } from '../utils/utils';
+import { deployConfig } from '../config';
 
 interface FrontendStackProps extends cdk.StackProps {
   allowedIps: string[];
@@ -34,14 +34,14 @@ export const getParams = async (path: string, awsProfile: string): Promise<Param
 };
 
 const app = new cdk.App();
-const stage = app.node.tryGetContext('stage');
-const baseConfig = app.node.tryGetContext('base');
-
-const context = app.node.tryGetContext(stage);
+const env = {
+  account: process.env.CDK_DEFAULT_ACCOUNT,
+  region: process.env.CDK_DEFAULT_REGION,
+};
 const tags = {
-  environment: stage,
-  appName: context.appName,
-  stageAlias: context.alias,
+  environment: deployConfig.stage,
+  appName: deployConfig.appName,
+  stageAlias: deployConfig.alias,
 };
 cdk.Aspects.of(app).add(new AwsSolutionsChecks({ verbose: false }));
 
@@ -88,35 +88,41 @@ class FrontendStack extends cdk.Stack {
 }
 
 const createFrontend = async () => {
-  const params = await getParams(context.ssmPath, baseConfig.awsProfile);
+  const params = await getParams(deployConfig.ssmPath, deployConfig.awsProfile);
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const userPoolId: Parameter = find(params, { Name: `${context.ssmPath}/${context.userPoolId}` })!;
+  const userPoolId: Parameter = find(params, {
+    Name: `${deployConfig.ssmPath}/${deployConfig.userPoolId}`,
+  })!;
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const identityPoolId: Parameter = find(params, {
-    Name: `${context.ssmPath}/${context.identityPoolId}`,
+    Name: `${deployConfig.ssmPath}/${deployConfig.identityPoolId}`,
   })!;
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const userPoolClientId: Parameter = find(params, {
-    Name: `${context.ssmPath}/${context.userPoolClientId}`,
+    Name: `${deployConfig.ssmPath}/${deployConfig.userPoolClientId}`,
   })!;
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unused-vars
   const graphqlUrl: Parameter = find(params, {
-    Name: `${context.ssmPath}/${context.graphqlUrl}`,
+    Name: `${deployConfig.ssmPath}/${deployConfig.graphqlUrl}`,
   })!;
 
-  new FrontendStack(app, `${context.alias}-${stage}-${context.appName}-frontendStack`, {
-    allowedIps: context.allowedIps,
-    backendRegion: process.env.CDK_DEPLOY_REGION! || process.env.CDK_DEFAULT_REGION!,
-    userPoolId: userPoolId.Value!,
-    identityPoolId: identityPoolId.Value!,
-    userPoolClientId: userPoolClientId.Value!,
-    graphqlUrl: graphqlUrl.Value!,
-    websiteFolder: './webapp/',
-    env: config({ region: 'us-east-1' }), // WAFv2 is available only in us-east-1
-    tags: tags,
-    description: 'FrontendStack for AWS HealthOmics integration (uksb-1tupboc60).',
-  });
+  new FrontendStack(
+    app,
+    `${deployConfig.alias}-${deployConfig.stage}-${deployConfig.appName}-frontendStack`,
+    {
+      allowedIps: deployConfig.allowedIps,
+      backendRegion: env.region!,
+      userPoolId: userPoolId.Value!,
+      identityPoolId: identityPoolId.Value!,
+      userPoolClientId: userPoolClientId.Value!,
+      graphqlUrl: graphqlUrl.Value!,
+      websiteFolder: './webapp/',
+      env: { ...env, region: 'us-east-1' }, // WAFv2 is available only in us-east-1
+      tags: tags,
+      description: 'FrontendStack for AWS HealthOmics integration (uksb-1tupboc60).',
+    }
+  );
 };
 
 createFrontend();
