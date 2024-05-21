@@ -106,6 +106,14 @@ npm ci
 npm run deployAll
 ```
 
+You can see the web app url like this after completing frontend stack deployment. You can sign in the app with your email and temporary password which you receive in your email.
+
+```zsh
+
+Outputs:
+xxx-dev-omics-app-frontendStack.cloudfrontdomain = xxxx.net
+```
+
 > ### Notice
 >
 > Execute the `bootstarp` command as follows if you have never executed bootstrap command with CDK in your region.

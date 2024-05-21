@@ -4,18 +4,20 @@ import { AwsSolutionsChecks, NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 
 import { ApplicationStack } from '../lib/application-stack';
-import { config } from '../utils/utils';
+import { deployConfig } from '../config';
 
 const app = new cdk.App();
-const stage = app.node.tryGetContext('stage');
-const baseConfg = app.node.tryGetContext('base');
-const context = app.node.tryGetContext(stage);
-const path = context.ssmPath;
+
+const path = deployConfig.ssmPath;
+const env = {
+  account: process.env.CDK_DEFAULT_ACCOUNT,
+  region: process.env.CDK_DEFAULT_REGION,
+};
 
 const tags = {
-  environment: stage,
-  appName: context.appName,
-  stageAlias: context.alias,
+  environment: deployConfig.stage,
+  appName: deployConfig.appName,
+  stageAlias: deployConfig.alias,
 };
 
 class InfraStack extends cdk.Stack {
@@ -23,10 +25,10 @@ class InfraStack extends cdk.Stack {
     super(scope, id, props);
 
     const application = new ApplicationStack(this, `${id}-application`, {
-      adminEmail: context.appAdminEmail,
-      adminUsername: context.alias,
-      omicsInput: context.omicsBuckets.input,
-      omicsOutput: context.omicsBuckets.output,
+      adminEmail: deployConfig.adminEmail,
+      adminUsername: deployConfig.alias,
+      omicsInput: deployConfig.omicsBuckets.input,
+      omicsOutput: deployConfig.omicsBuckets.output,
     });
 
     NagSuppressions.addResourceSuppressions(
@@ -55,19 +57,19 @@ class InfraStack extends cdk.Stack {
 
     // Store the parameters for webapp in SSM
     new cdk.aws_ssm.StringParameter(this, 'userPoolId', {
-      parameterName: `${path}/${context.userPoolId}`,
+      parameterName: `${path}/${deployConfig.userPoolId}`,
       stringValue: application.cognito.userPool.userPoolId,
     });
     new cdk.aws_ssm.StringParameter(this, 'IdentitiyPoolId', {
-      parameterName: `${path}/${context.identityPoolId}`,
+      parameterName: `${path}/${deployConfig.identityPoolId}`,
       stringValue: application.cognito.identityPool.ref || '',
     });
     new cdk.aws_ssm.StringParameter(this, 'UserPoolClientId', {
-      parameterName: `${path}/${context.userPoolClientId}`,
+      parameterName: `${path}/${deployConfig.userPoolClientId}`,
       stringValue: application.cognito.webappClient.userPoolClientId,
     });
     new cdk.aws_ssm.StringParameter(this, 'GraphQLUrl', {
-      parameterName: `${path}/${context.graphqlUrl}`,
+      parameterName: `${path}/${deployConfig.graphqlUrl}`,
       stringValue: application.graphqlApi.api.graphqlUrl,
     });
 
@@ -91,8 +93,12 @@ class InfraStack extends cdk.Stack {
 
 cdk.Aspects.of(app).add(new AwsSolutionsChecks({ verbose: false }));
 
-new InfraStack(app, `${context.alias}-${stage}-${context.appName}-infraStack`, {
-  env: config(baseConfg.deployAwsEnv),
-  tags: tags,
-  description: 'InfraStack for AWS HealthOmics integration (uksb-1tupboc60).',
-});
+new InfraStack(
+  app,
+  `${deployConfig.alias}-${deployConfig.stage}-${deployConfig.appName}-infraStack`,
+  {
+    env: env,
+    tags: tags,
+    description: 'InfraStack for AWS HealthOmics integration (uksb-1tupboc60).',
+  }
+);

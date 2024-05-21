@@ -1,9 +1,8 @@
 {
-  "$schema": "./schema/cdk.schema.json",
   "app": "npx ts-node --prefer-ts-exts bin/infra.ts",
   "toolkitStackName": "omics-app",
   "requireApproval": "never",
-  "profile": "<Your AWS profile>",
+  "profile": "hcls-tfc",
   "watch": {
     "include": ["**"],
     "exclude": [
@@ -38,28 +37,6 @@
     "@aws-cdk/aws-iam:importedRoleStackSafeDefaultPolicyName": true,
     "@aws-cdk/aws-s3:serverAccessLogsUseBucketPolicy": true,
     "@aws-cdk/aws-route53-patters:useCertificate": true,
-    "@aws-cdk/customresources:installLatestAwsSdkDefault": false,
-    "stage": "dev",
-    "base": {
-      "deployAwsEnv": {},
-      "awsProfile": "<Your AWS profile>"
-    },
-    "dev": {
-      "appName": "omics-app",
-      "alias": "japan-hcls",
-      "appAdminEmail": "<Your admin email address>",
-      "allowedIps": ["<Allowed CIDR>"],
-      "omicsBuckets": {
-        "input": "<Your input bucket name>",
-        "output": "<Your output bucket name>"
-      },
-      "ssmPath": "/omics",
-      "userPoolId": "userPoolId",
-      "identityPoolId": "identityPoolId",
-      "userPoolClientId": "userPoolClientId",
-      "functionUrl": "functionUrl",
-      "graphqlUrl": "graphqlUrl"
-    },
-    "prod": {}
+    "@aws-cdk/customresources:installLatestAwsSdkDefault": false
   }
 }
