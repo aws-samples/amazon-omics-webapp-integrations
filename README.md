@@ -67,7 +67,7 @@ const baseConfig = {
   alias: 'japan-hcls',
   awsProfile: 'your_profile',
   adminEmail: 'your_email@acme.com',
-  allowedIps: ['27.0.3.0/24'],
+  allowedIps: ['192.0.3.0/24'],
   ssmPath: '/omics',
   userPoolId: 'userPoolId',
   identityPoolId: 'identityPoolId',
