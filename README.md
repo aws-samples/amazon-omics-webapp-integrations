@@ -55,7 +55,7 @@ Only admin can access to this page and add new user or add a user to a group in 
 >
 > Cross region imports are not supported in AWS HealthOmics at this moment. If you want to use the sample data in [the AWS HealthOmics - End to End environment](https://github.com/aws-samples/amazon-omics-end-to-end-genomics) for the webapp and deploy the webapp in another supported region outside of us-east-1, copy the example data to your input bucket in that region.
 
-## Setup
+## Webapp configuration
 
 ### Create a config file as `config.ts`
 
