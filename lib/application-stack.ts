@@ -11,6 +11,7 @@ import { mutationResolvers } from '../api/graphql/resolvers/resolverMutationConf
 import { ecrResolvers } from '../api/graphql/resolvers/resolverConfigForECR';
 
 interface ApplicationStackProps extends StackProps {
+  multiTenancy: boolean;
   adminEmail: string;
   adminUsername: string;
   omicsInput: string;
@@ -24,6 +25,7 @@ export class ApplicationStack extends NestedStack {
     super(scope, id, props);
 
     this.cognito = new Cognito(this, `${id}-cognito`, {
+      multiTenancy: props.multiTenancy,
       adminEmail: props.adminEmail,
       adminUsername: props.adminUsername,
       passwordPolicy: {
@@ -72,19 +74,7 @@ export class ApplicationStack extends NestedStack {
               actions: ['s3:GetObject', 's3:GetBucketLocation', 's3:ListBucket', 's3:PutObject'],
               effect: aws_iam.Effect.ALLOW,
             }),
-            new aws_iam.PolicyStatement({
-              resources: ['*'],
-              actions: [
-                'ecr:GetAuthorizationToken',
-                'ecr:BatchCheckLayerAvailability',
-                'ecr:GetDownloadUrlForLayer',
-                'ecr:GetRepositoryPolicy',
-                'ecr:ListImages',
-                'ecr:DescribeImages',
-                'ecr:BatchGetImage',
-              ],
-              effect: aws_iam.Effect.ALLOW,
-            }),
+
             new aws_iam.PolicyStatement({
               resources: ['*'],
               actions: ['omics:*'],
@@ -173,12 +163,44 @@ export class ApplicationStack extends NestedStack {
         resources: ['*'],
       })
     );
-    manipulationEcrLambdaRole.addToPrincipalPolicy(
-      new aws_iam.PolicyStatement({
-        actions: ['ecr:CreateRepository', 'ecr:DescribeRepositories'],
-        resources: ['*'],
-      })
-    );
+
+    let tenantRoleArn: string;
+
+    if (!props.multiTenancy) {
+      omicsRole.addToPrincipalPolicy(
+        new aws_iam.PolicyStatement({
+          resources: ['*'],
+          actions: [
+            'ecr:GetAuthorizationToken',
+            'ecr:BatchCheckLayerAvailability',
+            'ecr:GetDownloadUrlForLayer',
+            'ecr:GetRepositoryPolicy',
+            'ecr:ListImages',
+            'ecr:DescribeImages',
+            'ecr:BatchGetImage',
+          ],
+          effect: aws_iam.Effect.ALLOW,
+        })
+      );
+      manipulationEcrLambdaRole.addToPrincipalPolicy(
+        new aws_iam.PolicyStatement({
+          actions: ['ecr:CreateRepository', 'ecr:DescribeRepositories'],
+          resources: ['*'],
+        })
+      );
+    } else {
+      const tenancyRole = new aws_iam.Role(this, `${id}-tenancyRole`, {
+        assumedBy: manipulationEcrLambdaRole,
+      });
+      tenancyRole.addToPrincipalPolicy(
+        new aws_iam.PolicyStatement({
+          actions: ['ecr:CreateRepository', 'ecr:DescribeRepositories'],
+          resources: ['*'],
+        })
+      );
+
+      tenantRoleArn = tenancyRole.roleArn;
+    }
 
     const listOmicsJob = new NodejsLambda(this, `${id}-listOmicsJob`, {
       runtime: aws_lambda.Runtime.NODEJS_18_X,
@@ -213,7 +235,7 @@ export class ApplicationStack extends NestedStack {
       },
       bundling: {
         externalModules: ['aws-sdk'],
-        nodeModules: ['@aws-sdk/client-omics', 'lodash'],
+        nodeModules: ['@aws-sdk/client-omics', '@aws-sdk/client-iam', 'lodash'],
       },
     });
 
@@ -228,10 +250,17 @@ export class ApplicationStack extends NestedStack {
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         region: Stack.of(this).region,
+        accountId: Stack.of(this).account,
+        tenantRoleArn: props.multiTenancy ? tenantRoleArn! : '',
       },
       bundling: {
         externalModules: ['aws-sdk'],
-        nodeModules: ['@aws-sdk/client-ecr', 'lodash'],
+        nodeModules: [
+          '@aws-sdk/client-ecr',
+          '@aws-sdk/client-iam',
+          '@aws-sdk/client-sts',
+          'lodash',
+        ],
       },
     });
 

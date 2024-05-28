@@ -69,6 +69,7 @@ Copy `config.sample.ts` and paste the file as `config.ts`. Then modify the `base
 const baseConfig = {
   appName: 'omics-app',
   alias: 'japan-hcls',
+  multiTenancy: false,
   awsProfile: 'your_profile',
   adminEmail: 'your_email@acme.com',
   allowedIps: ['192.0.3.0/24'],

@@ -4,6 +4,8 @@ import {
   CreateRepositoryCommand,
   DescribeRepositoriesCommand,
 } from '@aws-sdk/client-ecr';
+import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
+
 import { forIn, isEmpty, assign } from 'lodash';
 
 interface CreateRepositoryCommandInput {
@@ -27,13 +29,57 @@ interface ImageScanningConfiguration {
   scanOnPush: boolean;
 }
 
+const generatePolicy = (region: string, accountId: string, tenantId: string) => {
+  const policy = JSON.stringify({
+    Version: '2012-10-17',
+    Statement: [
+      {
+        Effect: 'Allow',
+        Action: ['ecr:CreateRepository', 'ecr:DescribeRepositories', 'ecr:ListImages'],
+        Resource: [`arn:aws:ecr:${region}:${accountId}:repository/${tenantId}`],
+      },
+    ],
+  });
+  return policy;
+};
+
 export const handler: Handler = async (event: any, context: Context) => {
   const req = { ...event, ...context };
   const region = process.env.region || '';
-
+  const accountId = process.env.accountId || '';
+  const tenantRoleArn = process.env.tenantRoleArn || '';
   console.log(event);
+
+  const stsClient = new STSClient({ region });
+
+  const tenantId = event.identity.claims['custom:tenantId'] || '';
+  let credentials: any;
+  if (tenantId) {
+    try {
+      const policy = generatePolicy(region, accountId, tenantId);
+
+      const stsCommand = new AssumeRoleCommand({
+        // The Amazon Resource Name (ARN) of the role to assume.
+        RoleArn: tenantRoleArn,
+        // An identifier for the assumed role session.
+        RoleSessionName: new Date().getTime().toString(),
+        // DurationSeconds: 900,
+        Policy: policy,
+      });
+      const response = await stsClient.send(stsCommand);
+      credentials = response.Credentials;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   const client = new ECRClient({
     region,
+    credentials: {
+      accessKeyId: credentials.AccessKeyId,
+      secretAccessKey: credentials.SecretAccessKey,
+      sessionToken: credentials.SessionToken,
+    },
   });
 
   const createRepository = async (input: CreateRepositoryCommandInput) => {
@@ -56,7 +102,11 @@ export const handler: Handler = async (event: any, context: Context) => {
 
   const describeRepositories = async () => {
     try {
-      const response = await client.send(new DescribeRepositoriesCommand({}));
+      const response = await client.send(
+        new DescribeRepositoriesCommand({
+          repositoryNames: tenantId ? [tenantId] : [],
+        })
+      );
       console.log(response);
       return response;
     } catch (error) {

@@ -25,6 +25,7 @@ class InfraStack extends cdk.Stack {
     super(scope, id, props);
 
     const application = new ApplicationStack(this, `${id}-application`, {
+      multiTenancy: deployConfig.multiTenancy,
       adminEmail: deployConfig.adminEmail,
       adminUsername: deployConfig.alias,
       omicsInput: deployConfig.omicsBuckets.input,

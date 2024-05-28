@@ -5,6 +5,7 @@ const stage = 'dev';
 const baseConfig: BaseConfig = {
   appName: 'omics-app',
   alias: 'japan-hcls',
+  multiTenancy: false,
   awsProfile: 'your_profile',
   adminEmail: 'your_email@acme.com',
   allowedIps: ['192.0.3.0/24'],

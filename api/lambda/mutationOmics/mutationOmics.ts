@@ -40,6 +40,7 @@ interface ParamObject {
 export const handler: Handler = async (event: any, context: Context) => {
   const req = { ...event, ...context };
   const region = process.env.region || '';
+  console.log(req);
 
   console.log(event);
   const client = new OmicsClient({

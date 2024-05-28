@@ -6,6 +6,7 @@ These properties in details are as follows.
 | ---------------- | -------------------------------------------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------- |
 | appName          | Application name for stack                                                                         | string                          | `dev`                                                   |
 | alias            | `StageAlias` in tag                                                                                | string                          | `japan-hcls`                                            |
+| multiTenancy     | Enable multi-tenancy mode                                                                          | boolean                         | `false`                                                 |
 | awsProfile       | Define your aws profile as same as that in `cdk.json`                                              | string                          | `your_profile`                                          |
 | adminEmail       | Send the temporary password to this email for signing graph application                            | string                          | `your_email@acme.com`                                   |
 | allowedIps       | AWS WAF allowed this ips to access to the graph application. e.g.) [`"192.0.3.0/24"`]              | string[]                        | `["192.0.3.0/24"]`                                      |

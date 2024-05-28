@@ -3,6 +3,8 @@
     "operation": "Invoke",
     "payload": {
         "field": "describeRepositoriesCommand",
-        "arguments":  $utils.toJson($context.arguments)
+        "arguments":  $utils.toJson($context.arguments),
+        "identity": $utils.toJson($context.identity)
+
     }
 }

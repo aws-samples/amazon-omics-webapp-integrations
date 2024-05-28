@@ -7,6 +7,7 @@ import {
 } from 'aws-cdk-lib/custom-resources';
 
 export interface CognitoProps {
+  multiTenancy: boolean;
   adminEmail: string;
   adminUsername: string;
   passwordPolicy: aws_cognito.PasswordPolicy;
@@ -23,7 +24,7 @@ export class Cognito extends Construct {
   constructor(scope: Construct, id: string, props: CognitoProps) {
     super(scope, id);
 
-    const cognitoUserPoolProps: aws_cognito.UserPoolProps = {
+    let cognitoUserPoolProps: aws_cognito.UserPoolProps = {
       userPoolName: `${id}-app-userpool`,
       selfSignUpEnabled: true,
       signInAliases: {
@@ -33,10 +34,21 @@ export class Cognito extends Construct {
       autoVerify: {
         email: true,
       },
+
       passwordPolicy: props.passwordPolicy,
       accountRecovery: aws_cognito.AccountRecovery.EMAIL_ONLY,
       removalPolicy: RemovalPolicy.DESTROY,
     };
+
+    // Multitenancy mode
+    if (props.multiTenancy) {
+      cognitoUserPoolProps = {
+        ...cognitoUserPoolProps,
+        customAttributes: {
+          tenantId: new aws_cognito.StringAttribute({ minLen: 1, maxLen: 255 }),
+        },
+      };
+    }
 
     this.userPool = new aws_cognito.UserPool(this, 'userpool', cognitoUserPoolProps);
 
