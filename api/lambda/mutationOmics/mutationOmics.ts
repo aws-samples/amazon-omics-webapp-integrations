@@ -3,39 +3,31 @@ import {
   OmicsClient,
   StartRunCommand,
   CreateWorkflowCommand,
-  WorkflowEngine,
+  StartRunCommandInput,
+  CreateWorkflowCommandInput,
+  OmicsClientConfig,
 } from '@aws-sdk/client-omics';
+import { IAMClient, ListRolesCommand, ListRolesCommandInput } from '@aws-sdk/client-iam';
 import { forIn, isEmpty, assign } from 'lodash';
 
-interface StartRunCommandInput {
-  logLevel?: string;
-  name: string;
-  outputUri: string;
-  parameters?: ParamObject;
-  priority?: string;
-  requestId?: string;
-  roleArn: string;
-  runId?: string;
-  storageCapacity?: number;
-  workflowId: string;
-  workflowType?: string;
-}
+const getTenantRole = async (region: string, tenantId: string) => {
+  const iamClient = new IAMClient({ region });
 
-interface CreateWorkflowCommandInput {
-  definitionUri?: string;
-  definitionZip?: [number];
-  description?: string;
-  engine?: WorkflowEngine;
-  main?: string;
-  parameterTemplate?: ParamObject;
-  requestId?: string;
-  storageCapacity?: number;
-  tags?: string;
-}
-
-interface ParamObject {
-  [key: string]: string | number;
-}
+  const prefix = `/${tenantId}`;
+  try {
+    const input: ListRolesCommandInput = {
+      PathPrefix: prefix,
+    };
+    const command = new ListRolesCommand(input);
+    const response = await iamClient.send(command);
+    console.log(response);
+    const tenantRoleArn = response.Roles![0].Arn;
+    return tenantRoleArn;
+  } catch (error) {
+    console.log(error);
+    return '';
+  }
+};
 
 export const handler: Handler = async (event: any, context: Context) => {
   const req = { ...event, ...context };
@@ -43,9 +35,24 @@ export const handler: Handler = async (event: any, context: Context) => {
   console.log(req);
 
   console.log(event);
-  const client = new OmicsClient({
+  const tenantId = event.identity.claims['custom:tenantId'] || '';
+  const input: OmicsClientConfig = {
     region,
-  });
+  };
+
+  const client = new OmicsClient(input);
+
+  let omicsRoleArn: string;
+  if (tenantId) {
+    const tenantRoleArn = await getTenantRole(region, tenantId);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    omicsRoleArn = tenantRoleArn!;
+  } else {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    omicsRoleArn = process.env.runCommandRoleArn!;
+  }
+  console.log('omics role');
+  console.log(omicsRoleArn);
 
   const startRunCommand = async (input: StartRunCommandInput) => {
     try {
@@ -71,6 +78,7 @@ export const handler: Handler = async (event: any, context: Context) => {
           assign(filteredInput, { [i]: value });
         }
       });
+      console.log(filteredInput);
       const response = await client.send(new CreateWorkflowCommand(filteredInput));
       console.log(response);
       return response;
@@ -82,13 +90,27 @@ export const handler: Handler = async (event: any, context: Context) => {
   try {
     switch (event.field) {
       case 'startRunCommand': {
-        const input = { ...event.arguments.input, roleArn: process.env.runCommandRoleArn };
+        let input: StartRunCommandInput = {
+          ...event.arguments.input,
+          roleArn: omicsRoleArn,
+        };
+        if (tenantId) {
+          input = { ...input, tags: { tenantId: tenantId } };
+        }
         const res = await startRunCommand(input);
         console.log(res);
         return res;
       }
       case 'createWorkflowCommand': {
-        const res = await createWorkflow(event.arguments.input);
+        let input: CreateWorkflowCommandInput = {
+          ...event.arguments.input,
+          requestId: new Date().getTime().toString(),
+        };
+        if (tenantId) {
+          input = { ...input, tags: { tenantId: tenantId } };
+        }
+        console.log(input);
+        const res = await createWorkflow(input);
         console.log(res);
         return res;
       }

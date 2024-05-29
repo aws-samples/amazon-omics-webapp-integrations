@@ -6,23 +6,11 @@ import {
   ListRunTasksCommand,
   GetRunCommand,
   GetWorkflowCommand,
+  ListRunTasksOutput,
   WorkflowType,
 } from '@aws-sdk/client-omics';
 import { find } from 'lodash';
 
-interface ListRunTasksOutput {
-  name: string;
-  id: string;
-  arn: string;
-  creationTime: Date;
-  priority: string;
-  workflowId: string;
-  storageCapacity: string;
-  startTime: Date;
-  stopTime: Date;
-  status: string;
-  tasks: [];
-}
 export const handler: Handler = async (event: any, context: Context) => {
   const req = { ...event, ...context };
   const region = process.env.region || '';

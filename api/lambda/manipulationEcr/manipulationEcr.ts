@@ -2,32 +2,13 @@ import { Context, Handler } from 'aws-lambda';
 import {
   ECRClient,
   CreateRepositoryCommand,
+  CreateRepositoryCommandInput,
   DescribeRepositoriesCommand,
+  ECRClientConfig,
 } from '@aws-sdk/client-ecr';
 import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
 
 import { forIn, isEmpty, assign } from 'lodash';
-
-interface CreateRepositoryCommandInput {
-  encryptionConfiguration?: EncryptionConfiguration;
-  imageScanningConfiguration?: ImageScanningConfiguration;
-  imageTagMutability?: string;
-  registryId?: string;
-  repositoryName: string;
-  // tags?: Tags[];
-}
-
-// interface Tags {
-//   [key: string]: string | string;
-// }
-
-interface EncryptionConfiguration {
-  encryptionType: string;
-}
-
-interface ImageScanningConfiguration {
-  scanOnPush: boolean;
-}
 
 const generatePolicy = (region: string, accountId: string, tenantId: string) => {
   const policy = JSON.stringify({
@@ -54,6 +35,9 @@ export const handler: Handler = async (event: any, context: Context) => {
 
   const tenantId = event.identity.claims['custom:tenantId'] || '';
   let credentials: any;
+  let input: ECRClientConfig = {
+    region,
+  };
   if (tenantId) {
     try {
       const policy = generatePolicy(region, accountId, tenantId);
@@ -68,19 +52,21 @@ export const handler: Handler = async (event: any, context: Context) => {
       });
       const response = await stsClient.send(stsCommand);
       credentials = response.Credentials;
+      input = {
+        ...input,
+        credentials: {
+          accessKeyId: credentials.AccessKeyId,
+          secretAccessKey: credentials.SecretAccessKey,
+          sessionToken: credentials.SessionToken,
+        },
+      };
+      console.log(response);
     } catch (error) {
       console.log(error);
     }
   }
 
-  const client = new ECRClient({
-    region,
-    credentials: {
-      accessKeyId: credentials.AccessKeyId,
-      secretAccessKey: credentials.SecretAccessKey,
-      sessionToken: credentials.SessionToken,
-    },
-  });
+  const client = new ECRClient(input);
 
   const createRepository = async (input: CreateRepositoryCommandInput) => {
     try {

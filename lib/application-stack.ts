@@ -114,7 +114,7 @@ export class ApplicationStack extends NestedStack {
     );
     mutationOmicsLambdaRole.addToPrincipalPolicy(
       new aws_iam.PolicyStatement({
-        actions: ['omics:StartRun', 'omics:CreateWorkflow'],
+        actions: ['omics:StartRun', 'omics:CreateWorkflow', 'omics:TagResource'],
         resources: ['*'],
       })
     );
@@ -129,6 +129,12 @@ export class ApplicationStack extends NestedStack {
       new aws_iam.PolicyStatement({
         actions: ['iam:GetRole', 'iam:PassRole'],
         resources: [omicsRole.roleArn],
+      })
+    );
+    mutationOmicsLambdaRole.addToPrincipalPolicy(
+      new aws_iam.PolicyStatement({
+        actions: ['iam:ListRoles'],
+        resources: ['*'],
       })
     );
 
@@ -149,6 +155,7 @@ export class ApplicationStack extends NestedStack {
           'omics:ListWorkflows',
           'omics:GetRun',
           'omics:GetWorkflow',
+          'omics:TagResource',
         ],
         resources: ['*'],
       })
@@ -190,7 +197,10 @@ export class ApplicationStack extends NestedStack {
       );
     } else {
       const tenancyRole = new aws_iam.Role(this, `${id}-tenancyRole`, {
-        assumedBy: manipulationEcrLambdaRole,
+        assumedBy: new aws_iam.CompositePrincipal(
+          manipulationEcrLambdaRole,
+          mutationOmicsLambdaRole
+        ),
       });
       tenancyRole.addToPrincipalPolicy(
         new aws_iam.PolicyStatement({
@@ -235,7 +245,12 @@ export class ApplicationStack extends NestedStack {
       },
       bundling: {
         externalModules: ['aws-sdk'],
-        nodeModules: ['@aws-sdk/client-omics', '@aws-sdk/client-iam', 'lodash'],
+        nodeModules: [
+          '@aws-sdk/client-omics',
+          '@aws-sdk/client-iam',
+          '@aws-sdk/client-sts',
+          'lodash',
+        ],
       },
     });
 
@@ -255,12 +270,7 @@ export class ApplicationStack extends NestedStack {
       },
       bundling: {
         externalModules: ['aws-sdk'],
-        nodeModules: [
-          '@aws-sdk/client-ecr',
-          '@aws-sdk/client-iam',
-          '@aws-sdk/client-sts',
-          'lodash',
-        ],
+        nodeModules: ['@aws-sdk/client-ecr', '@aws-sdk/client-sts', 'lodash'],
       },
     });
 
