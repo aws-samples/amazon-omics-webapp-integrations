@@ -71,7 +71,7 @@ export class ApplicationStack extends NestedStack {
                 `arn:aws:s3:::${props.omicsOutput}`,
                 `arn:aws:s3:::${props.omicsOutput}/*`,
               ],
-              actions: ['s3:GetObject', 's3:GetBucketLocation', 's3:ListBucket', 's3:PutObject'],
+              actions: ['s3:PutObject'],
               effect: aws_iam.Effect.ALLOW,
             }),
 
@@ -127,13 +127,13 @@ export class ApplicationStack extends NestedStack {
 
     mutationOmicsLambdaRole.addToPrincipalPolicy(
       new aws_iam.PolicyStatement({
-        actions: ['iam:GetRole', 'iam:PassRole'],
-        resources: [omicsRole.roleArn],
+        actions: ['sts:AssumeRole', 'iam:GetRole', 'iam:PassRole', 'iam:ListRoles'],
+        resources: ['*'],
       })
     );
     mutationOmicsLambdaRole.addToPrincipalPolicy(
       new aws_iam.PolicyStatement({
-        actions: ['iam:ListRoles'],
+        actions: ['ecr:DescribeRepositories', 'ecr:ListTagsForResource'],
         resources: ['*'],
       })
     );
@@ -195,6 +195,12 @@ export class ApplicationStack extends NestedStack {
           resources: ['*'],
         })
       );
+      mutationOmicsLambdaRole.addToPrincipalPolicy(
+        new aws_iam.PolicyStatement({
+          actions: ['iam:GetRole', 'iam:PassRole'],
+          resources: [omicsRole.roleArn],
+        })
+      );
     } else {
       const tenancyRole = new aws_iam.Role(this, `${id}-tenancyRole`, {
         assumedBy: new aws_iam.CompositePrincipal(
@@ -204,7 +210,22 @@ export class ApplicationStack extends NestedStack {
       });
       tenancyRole.addToPrincipalPolicy(
         new aws_iam.PolicyStatement({
-          actions: ['ecr:CreateRepository', 'ecr:DescribeRepositories'],
+          actions: [
+            'ecr:CreateRepository',
+            'ecr:DescribeRepositories',
+            'ecr:GetAuthorizationToken',
+            'ecr:BatchCheckLayerAvailability',
+            'ecr:GetDownloadUrlForLayer',
+            'ecr:GetRepositoryPolicy',
+            'ecr:ListImages',
+            'ecr:DescribeImages',
+            'ecr:BatchGetImage',
+            'iam:GetRole',
+            'iam:PassRole',
+            'omics:TagResource',
+            'omics:StartRun',
+            'omics:CreateWorkflow',
+          ],
           resources: ['*'],
         })
       );
@@ -248,7 +269,7 @@ export class ApplicationStack extends NestedStack {
         nodeModules: [
           '@aws-sdk/client-omics',
           '@aws-sdk/client-iam',
-          '@aws-sdk/client-sts',
+          '@aws-sdk/client-ecr',
           'lodash',
         ],
       },
