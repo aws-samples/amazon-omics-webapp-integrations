@@ -15,6 +15,10 @@ export const handler: Handler = async (event: any, context: Context) => {
   const req = { ...event, ...context };
   const region = process.env.region || '';
 
+  console.log(event);
+  const tenantId = event.identity.claims['custom:tenantId'] || '';
+  console.log(tenantId);
+
   const client = new OmicsClient({
     region,
   });
