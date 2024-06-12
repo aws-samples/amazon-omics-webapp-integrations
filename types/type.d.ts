@@ -1,7 +1,6 @@
 export type BaseConfig = {
   appName: string;
   alias: string;
-
   awsProfile: string;
   adminEmail: string;
   allowedIps: string[];
