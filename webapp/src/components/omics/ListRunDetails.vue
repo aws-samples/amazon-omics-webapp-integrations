@@ -53,6 +53,7 @@ const getTaskColumns = computed(() => {
 
   if (isEmpty(data)) return [];
   if (data && isArray(data)) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const filterdData = filter(data, (v: any) => {
       if (v.tasks.length !== 0) {
         return v;
@@ -79,7 +80,9 @@ const getTaskColumns = computed(() => {
   return data;
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let tableColumns: any = ref(getColumns);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let taskColumns: any = ref(getTaskColumns);
 
 const tableRows = computed(() => {
