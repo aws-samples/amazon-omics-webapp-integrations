@@ -1,7 +1,7 @@
 export type BaseConfig = {
   appName: string;
   alias: string;
-  multiTenancy: boolean;
+
   awsProfile: string;
   adminEmail: string;
   allowedIps: string[];
