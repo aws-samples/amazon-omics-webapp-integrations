@@ -32,3 +32,4 @@ webapp/*.sln
 !postcss.config.js
 !webapp/src/stores/index.js
 !webapp/src/stores/store-flag.d.ts
+!types/type.d.ts
