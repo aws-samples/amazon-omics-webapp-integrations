@@ -11,73 +11,18 @@ import {
   Tag,
   Repository,
 } from '@aws-sdk/client-ecr';
-import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
 
 import { forIn, isEmpty, assign, filter } from 'lodash';
-
-const generatePolicy = (tenantId: string) => {
-  const policy = JSON.stringify({
-    Version: '2012-10-17',
-    Statement: [
-      {
-        Effect: 'Allow',
-        Action: ['ecr:DescribeRepositories', 'ecr:ListImages', 'ecr:ListTagsForResource'],
-        Resource: '*',
-      },
-      {
-        Effect: 'Allow',
-        Action: ['ecr:CreateRepository', 'ecr:TagResource'],
-        Resource: '*',
-        Condition: {
-          StringEquals: {
-            'aws:RequestTag/tenantId': tenantId,
-          },
-        },
-      },
-    ],
-  });
-  return policy;
-};
 
 export const handler: Handler = async (event: any, context: Context) => {
   const req = { ...event, ...context };
   const region = process.env.region || '';
-  const tenantRoleArn = process.env.tenantRoleArn || '';
   console.log(event);
 
-  const stsClient = new STSClient({ region });
-
   const tenantId = event.identity.claims['custom:tenantId'] || '';
-  let credentials: any;
-  let input: ECRClientConfig = {
+  const input: ECRClientConfig = {
     region,
   };
-  if (tenantId) {
-    try {
-      const policy = generatePolicy(region);
-
-      const stsCommand = new AssumeRoleCommand({
-        // The Amazon Resource Name (ARN) of the role to assume.
-        RoleArn: tenantRoleArn,
-        // An identifier for the assumed role session.
-        RoleSessionName: new Date().getTime().toString(),
-        Policy: policy,
-      });
-      const response = await stsClient.send(stsCommand);
-      credentials = response.Credentials;
-      input = {
-        ...input,
-        credentials: {
-          accessKeyId: credentials.AccessKeyId,
-          secretAccessKey: credentials.SecretAccessKey,
-          sessionToken: credentials.SessionToken,
-        },
-      };
-      console.log(response);
-    } catch (error) {
-      console.log(error);
-    }
-  }
 
   const client = new ECRClient(input);
 

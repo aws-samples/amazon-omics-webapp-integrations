@@ -170,6 +170,24 @@ export class ApplicationStack extends NestedStack {
         resources: ['*'],
       })
     );
+    manipulationEcrLambdaRole.addToPrincipalPolicy(
+      new aws_iam.PolicyStatement({
+        actions: [
+          'ecr:CreateRepository',
+          'ecr:DescribeRepositories',
+          'ecr:GetAuthorizationToken',
+          'ecr:BatchCheckLayerAvailability',
+          'ecr:GetDownloadUrlForLayer',
+          'ecr:GetRepositoryPolicy',
+          'ecr:ListImages',
+          'ecr:TagResource',
+          'ecr:DescribeImages',
+          'ecr:BatchGetImage',
+          'ecr:ListTagsForResource',
+        ],
+        resources: ['*'],
+      })
+    );
 
     let tenantRoleArn: string;
 
@@ -189,12 +207,7 @@ export class ApplicationStack extends NestedStack {
           effect: aws_iam.Effect.ALLOW,
         })
       );
-      manipulationEcrLambdaRole.addToPrincipalPolicy(
-        new aws_iam.PolicyStatement({
-          actions: ['ecr:CreateRepository', 'ecr:DescribeRepositories'],
-          resources: ['*'],
-        })
-      );
+
       mutationOmicsLambdaRole.addToPrincipalPolicy(
         new aws_iam.PolicyStatement({
           actions: ['iam:GetRole', 'iam:PassRole'],
@@ -288,12 +301,10 @@ export class ApplicationStack extends NestedStack {
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         region: Stack.of(this).region,
-        accountId: Stack.of(this).account,
-        tenantRoleArn: props.multiTenancy ? tenantRoleArn! : '',
       },
       bundling: {
         externalModules: ['aws-sdk'],
-        nodeModules: ['@aws-sdk/client-ecr', '@aws-sdk/client-sts', 'lodash'],
+        nodeModules: ['@aws-sdk/client-ecr', 'lodash'],
       },
     });
 
