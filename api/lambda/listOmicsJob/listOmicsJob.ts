@@ -10,6 +10,8 @@ import {
   ListRunTasksCommandOutput,
   ListTagsForResourceCommand,
   WorkflowType,
+  RunListItem,
+  TaskListItem,
 } from '@aws-sdk/client-omics';
 import { find, filter, has } from 'lodash';
 
@@ -42,7 +44,6 @@ export const handler: Handler = async (event: any, context: Context) => {
         const workflowsByTenantId: any[] = [];
         await Promise.all(
           items.map(async (workflow: WorkflowListItem) => {
-            console.log(workflow.arn);
             const command = new ListTagsForResourceCommand({
               resourceArn: workflow.arn,
             });
@@ -73,7 +74,25 @@ export const handler: Handler = async (event: any, context: Context) => {
         nextToken = response.nextToken;
       } while (nextToken);
 
-      return items;
+      if (tenantId) {
+        const runsByTenantId: any[] = [];
+        await Promise.all(
+          items.map(async (run: RunListItem) => {
+            console.log(run.arn);
+            const command = new ListTagsForResourceCommand({
+              resourceArn: run.arn,
+            });
+            const res = await client.send(command);
+            if (res.tags!.tenantId === tenantId) {
+              runsByTenantId.push(run);
+            }
+          })
+        );
+        console.log(runsByTenantId);
+        return runsByTenantId;
+      } else {
+        return items;
+      }
     } catch (error) {
       console.error(error);
       return error;
