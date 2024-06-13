@@ -156,6 +156,7 @@ export class ApplicationStack extends NestedStack {
           'omics:GetRun',
           'omics:GetWorkflow',
           'omics:TagResource',
+          'omics:ListTagsForResource',
         ],
         resources: ['*'],
       })

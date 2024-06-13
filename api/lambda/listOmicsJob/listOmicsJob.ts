@@ -2,14 +2,16 @@ import { Context, Handler } from 'aws-lambda';
 import {
   OmicsClient,
   ListWorkflowsCommand,
+  WorkflowListItem,
   ListRunsCommand,
   ListRunTasksCommand,
   GetRunCommand,
   GetWorkflowCommand,
-  ListRunTasksOutput,
+  ListRunTasksCommandOutput,
+  ListTagsForResourceCommand,
   WorkflowType,
 } from '@aws-sdk/client-omics';
-import { find } from 'lodash';
+import { find, filter, has } from 'lodash';
 
 export const handler: Handler = async (event: any, context: Context) => {
   const req = { ...event, ...context };
@@ -23,13 +25,38 @@ export const handler: Handler = async (event: any, context: Context) => {
     region,
   });
   const listWorkflow = async (workflowType: WorkflowType) => {
+    let nextToken = undefined;
+    const items = [];
     try {
-      const response = await client.send(
-        new ListWorkflowsCommand({
-          type: workflowType,
-        })
-      );
-      return response.items;
+      do {
+        const response = await client.send(
+          new ListWorkflowsCommand({
+            type: workflowType,
+          })
+        );
+        items.push(...(response.items || []));
+        nextToken = response.nextToken;
+      } while (nextToken);
+
+      if (tenantId) {
+        const workflowsByTenantId: any[] = [];
+        await Promise.all(
+          items.map(async (workflow: WorkflowListItem) => {
+            console.log(workflow.arn);
+            const command = new ListTagsForResourceCommand({
+              resourceArn: workflow.arn,
+            });
+            const res = await client.send(command);
+            if (res.tags!.tenantId === tenantId) {
+              workflowsByTenantId.push(workflow);
+            }
+          })
+        );
+        console.log(workflowsByTenantId);
+        return workflowsByTenantId;
+      } else {
+        return items;
+      }
     } catch (error) {
       console.error(error);
       return error;
@@ -37,9 +64,16 @@ export const handler: Handler = async (event: any, context: Context) => {
   };
 
   const listRunCommand = async () => {
+    let nextToken = undefined;
+    const items = [];
     try {
-      const response = await client.send(new ListRunsCommand({}));
-      return response.items;
+      do {
+        const response = await client.send(new ListRunsCommand({}));
+        items.push(...(response.items || []));
+        nextToken = response.nextToken;
+      } while (nextToken);
+
+      return items;
     } catch (error) {
       console.error(error);
       return error;
@@ -47,13 +81,20 @@ export const handler: Handler = async (event: any, context: Context) => {
   };
 
   const listRunTasksCommand = async (id: string) => {
+    let nextToken = undefined;
+    const items = [];
     try {
-      const response = await client.send(
-        new ListRunTasksCommand({
-          id,
-        })
-      );
-      return response.items;
+      do {
+        const response = await client.send(
+          new ListRunTasksCommand({
+            id,
+          })
+        );
+        items.push(...(response.items || []));
+        nextToken = response.nextToken;
+      } while (nextToken);
+
+      return items;
     } catch (error) {
       console.log(error);
     }
@@ -117,7 +158,7 @@ export const handler: Handler = async (event: any, context: Context) => {
         return runCommandList;
       }
       case 'getListRunDetails': {
-        const result: ListRunTasksOutput[] = [];
+        const result: ListRunTasksCommandOutput[] = [];
         const runCommand: [] = await listRunCommand();
         await Promise.all(
           runCommand.map(async (res: any) => {
