@@ -65,8 +65,6 @@ const checkRepositoryPermission = async (
   const describeRepoCommand = new DescribeRepositoriesCommand(describeRepoCommandInput);
   const describeRepoResponse = await ecrClient.send(describeRepoCommand);
 
-  // // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  // const repositoryUri = describeRepoResponse.repositories![0].repositoryUri;
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const repositoryArn = describeRepoResponse.repositories![0].repositoryArn;
 
