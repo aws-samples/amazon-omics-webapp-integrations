@@ -4,20 +4,35 @@ import {
   CreateRepositoryCommand,
   CreateRepositoryCommandInput,
   DescribeRepositoriesCommand,
+  DescribeRepositoriesCommandInput,
   ECRClientConfig,
+  DescribeRepositoriesCommandOutput,
+  ListTagsForResourceCommand,
+  Tag,
+  Repository,
 } from '@aws-sdk/client-ecr';
 import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
 
-import { forIn, isEmpty, assign } from 'lodash';
+import { forIn, isEmpty, assign, filter } from 'lodash';
 
-const generatePolicy = (region: string, accountId: string, tenantId: string) => {
+const generatePolicy = (tenantId: string) => {
   const policy = JSON.stringify({
     Version: '2012-10-17',
     Statement: [
       {
         Effect: 'Allow',
-        Action: ['ecr:CreateRepository', 'ecr:DescribeRepositories', 'ecr:ListImages'],
-        Resource: [`arn:aws:ecr:${region}:${accountId}:repository/${tenantId}`],
+        Action: ['ecr:DescribeRepositories', 'ecr:ListImages', 'ecr:ListTagsForResource'],
+        Resource: '*',
+      },
+      {
+        Effect: 'Allow',
+        Action: ['ecr:CreateRepository', 'ecr:TagResource'],
+        Resource: '*',
+        Condition: {
+          StringEquals: {
+            'aws:RequestTag/tenantId': tenantId,
+          },
+        },
       },
     ],
   });
@@ -27,7 +42,6 @@ const generatePolicy = (region: string, accountId: string, tenantId: string) => 
 export const handler: Handler = async (event: any, context: Context) => {
   const req = { ...event, ...context };
   const region = process.env.region || '';
-  const accountId = process.env.accountId || '';
   const tenantRoleArn = process.env.tenantRoleArn || '';
   console.log(event);
 
@@ -40,14 +54,13 @@ export const handler: Handler = async (event: any, context: Context) => {
   };
   if (tenantId) {
     try {
-      const policy = generatePolicy(region, accountId, tenantId);
+      const policy = generatePolicy(region);
 
       const stsCommand = new AssumeRoleCommand({
         // The Amazon Resource Name (ARN) of the role to assume.
         RoleArn: tenantRoleArn,
         // An identifier for the assumed role session.
         RoleSessionName: new Date().getTime().toString(),
-        // DurationSeconds: 900,
         Policy: policy,
       });
       const response = await stsClient.send(stsCommand);
@@ -70,12 +83,25 @@ export const handler: Handler = async (event: any, context: Context) => {
 
   const createRepository = async (input: CreateRepositoryCommandInput) => {
     try {
-      const filteredInput = {};
+      let filteredInput = {};
       forIn(input, (value: any, i: string) => {
         if (!isEmpty(value)) {
           assign(filteredInput, { [i]: value });
         }
       });
+      if (tenantId) {
+        filteredInput = {
+          ...filteredInput,
+          tags: [
+            {
+              // Tag
+              Key: 'tenantId',
+              Value: tenantId,
+            },
+          ],
+        };
+      }
+      console.log(filteredInput);
       const response = await client.send(new CreateRepositoryCommand(filteredInput));
       console.log(response);
       return response;
@@ -88,13 +114,39 @@ export const handler: Handler = async (event: any, context: Context) => {
 
   const describeRepositories = async () => {
     try {
-      const response = await client.send(
-        new DescribeRepositoriesCommand({
-          repositoryNames: tenantId ? [tenantId] : [],
-        })
-      );
-      console.log(response);
-      return response;
+      const input: DescribeRepositoriesCommandInput = {};
+      const allRepos = [];
+      let nextToken = undefined;
+      do {
+        const response: DescribeRepositoriesCommandOutput = await client.send(
+          new DescribeRepositoriesCommand({ ...input, nextToken: nextToken })
+        );
+        allRepos.push(...(response.repositories || []));
+        nextToken = response.nextToken;
+      } while (nextToken);
+      console.log(allRepos);
+      if (tenantId) {
+        const tenantRepos: any[] = [];
+        await Promise.all(
+          allRepos.map(async (repo: Repository) => {
+            console.log(repo.repositoryArn);
+            const command = new ListTagsForResourceCommand({
+              resourceArn: repo.repositoryArn,
+            });
+            const res = await client.send(command);
+            if (res.tags?.length) {
+              filter(res.tags, (tag: Tag) => {
+                if (tag.Value === tenantId) {
+                  tenantRepos.push(repo);
+                }
+              });
+            }
+          })
+        );
+        return { repositories: tenantRepos };
+      } else {
+        return { repositories: allRepos };
+      }
     } catch (error) {
       console.log(error);
       return error;
@@ -109,7 +161,6 @@ export const handler: Handler = async (event: any, context: Context) => {
       }
       case 'describeRepositoriesCommand': {
         const res = await describeRepositories();
-        console.log(res);
         return res;
       }
       default:
