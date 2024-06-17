@@ -97,7 +97,7 @@ const checkRepositoryPermission = async (
   ) {
     return 'AccessDenied: No permission of accessing the repository';
   }
-  return 'Passed: TanantId tags between ECR repositotry and Omics Rol';
+  return 'Passed: TanantId tags between ECR repositotry and Omics Role';
 };
 
 export const handler: Handler = async (event: any, context: Context) => {

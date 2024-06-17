@@ -174,6 +174,7 @@ export class Cognito extends Construct {
                 'cognito-idp:GetGroup',
                 'cognito-idp:ChangePassword',
                 'cognito-idp:AdminListGroupsForUser',
+                'cognito-idp:AdminUpdateUserAttributes',
               ],
               resources: [this.userPool.userPoolArn],
             }),

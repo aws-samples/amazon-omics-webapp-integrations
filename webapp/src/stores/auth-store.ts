@@ -15,6 +15,7 @@ export const useAuthStore = defineStore('auth', {
   }),
   getters: {
     userEmail: (state) => get(state, ['user', 'attributes', 'email'], 'N/A'),
+    userAttributes: (state) => get(state, ['user', 'attributes'], 'N/A'),
     userName: (state) => get(state, ['user', 'username'], 'N/A'),
     userCredentials: (state) => get(state, ['credentials'], null),
     userPoolId: (state) => get(state, ['user', 'pool', 'userPoolId']),

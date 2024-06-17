@@ -255,7 +255,7 @@ export class ApplicationStack extends NestedStack {
       entry: path.join(__dirname, '../api/lambda/listOmicsJob/listOmicsJob.ts'),
       depsLockFilePath: path.join(__dirname, '../api/lambda/listOmicsJob/package-lock.json'),
       handler: 'handler',
-      timeout: Duration.seconds(12),
+      timeout: Duration.seconds(30),
       role: listOmicsJobLambdaRole,
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
@@ -273,7 +273,7 @@ export class ApplicationStack extends NestedStack {
       entry: path.join(__dirname, '../api/lambda/mutationOmics/mutationOmics.ts'),
       depsLockFilePath: path.join(__dirname, '../api/lambda/mutationOmics/package-lock.json'),
       handler: 'handler',
-      timeout: Duration.seconds(12),
+      timeout: Duration.seconds(30),
       role: mutationOmicsLambdaRole,
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
@@ -297,7 +297,7 @@ export class ApplicationStack extends NestedStack {
       entry: path.join(__dirname, '../api/lambda/manipulationEcr/manipulationEcr.ts'),
       depsLockFilePath: path.join(__dirname, '../api/lambda/manipulationEcr/package-lock.json'),
       handler: 'handler',
-      timeout: Duration.seconds(12),
+      timeout: Duration.seconds(30),
       role: manipulationEcrLambdaRole,
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {

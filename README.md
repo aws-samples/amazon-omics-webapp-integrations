@@ -63,7 +63,13 @@ To deploy the web app with AWS CDK, need to add your aws profile to `profile` in
 
 ### Create a config file as `config.ts`
 
-Copy `config.sample.ts` and paste the file as `config.ts`. Then modify the `baseConfig` properties as your enviroment and requirements. For the reference, `baseConfig` in the sample file as follows:
+Create the `config.ts` based on `config.sample.ts` by the following command.
+
+```zsh
+cp config.sample.ts config.ts
+```
+
+Then modify the `baseConfig` properties as your enviroment and requirements. For the reference, `baseConfig` in the sample file as follows:
 
 ```ts
 const baseConfig = {
@@ -137,6 +143,110 @@ npm run destroyAll
 
 Also, delete your repositories in ECR if you need.
 
+## Multi-tenancy mode
+
+Set `multiTenancy` to `true` in `config.ts` if you would like to use this app as SaaS(Multi-tenancy).
+This app would restrict user access to AWS resource like Amazon ECR, Amazon S3 and AWS HealthOmics by [ABAC](https://docs.aws.amazon.com/IAM/latest/UserGuide/introduction_attribute-based-access-control.html) (Attribute-based access control).
+In this webapp, ABAC diagrams are as follows:
+
+![ABAC-diagrams](./images//abac-workflow.png)
+
+### Prerequisites
+
+- Create a user in Cognito user pools and add the tenant value as `custom:tenantId` to the user. (e.g. Name:`custom:tenantId`, Value:`tenant1`)
+
+- Create the repositories with `tenantId` tag in Amazon ECR. (e.g. Key:`tenantId`, Value:`tenant1`)
+- Create an IAM role with `path` for AWS HealthOmics for each tenant
+
+  - Create the role with the following command replacing both `YOUR_TENANT_ID` and `YOUR_AWS_PROFILE` with your own value.
+
+  ```zsh
+  aws iam create-role --path '/YOUR_TENANT_ID/' --role-name YOUR_TENANT_ID-omics-workflow --tags Key=tenantId,Value= YOUR_TENANT_ID --assume-role-policy-document '{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "omics.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+        }
+    ]
+  }' --profile YOUR_AWS_PROFILE
+  ```
+
+  - Create your policy and attach the policy to the role. Require the permission like specific S3 bucket and ECR repository access, and CloudWatch.
+
+  ```zsh
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "s3:GetBucketLocation",
+                "s3:GetObject",
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::omics-tenant-test",
+                "arn:aws:s3:::omics-tenant-test/*",
+                "arn:aws:s3:::aws-genomics-datasets",
+                "arn:aws:s3:::aws-genomics-datasets/*",
+                "arn:aws:s3:::aws-genomics-static-us-east-1",
+                "arn:aws:s3:::aws-genomics-static-us-east-1/*",
+                "arn:aws:s3:::broad-references",
+                "arn:aws:s3:::broad-references/*",
+                "arn:aws:s3:::gatk-test-data",
+                "arn:aws:s3:::gatk-test-data/*"
+            ],
+            "Effect": "Allow"
+        },
+        {
+            "Action": [
+                "s3:GetBucketLocation",
+                "s3:GetObject",
+                "s3:ListBucket",
+                "s3:PutObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::YOUR_BUCKET_NAME/TENANT_ID",
+                "arn:aws:s3:::YOUR_BUCKET_NAME/TENANT_ID/*"
+            ],
+            "Effect": "Allow"
+        },
+        {
+            "Action": "omics:*",
+            "Resource": "*",
+            "Effect": "Allow"
+        },
+        {
+            "Action": "logs:CreateLogGroup",
+            "Resource": "arn:aws:logs:us-east-1:YOUR_AWS_ACCOUNT_ID:log-group:/aws/omics/WorkflowLog:*",
+            "Effect": "Allow"
+        },
+        {
+            "Action": [
+                "logs:CreateLogStream",
+                "logs:DescribeLogStreams",
+                "logs:PutLogEvents"
+            ],
+            "Resource": "arn:aws:logs:us-east-1:YOUR_AWS_ACCOUNT_ID:log-group:/aws/omics/WorkflowLog:log-stream:*",
+            "Effect": "Allow"
+        },
+        {
+            "Action": [
+                "ecr:*"
+            ],
+            "Resource": [
+                "arn:aws:ecr:us-east-1:YOUR_AWS_ACCOUNT_ID:repository/TENANT_ID"
+            ],
+            "Effect": "Allow"
+        }
+    ]
+  }
+
+  ```
+
 ## Commands
 
 - `npm run deployInfra`
@@ -163,4 +273,4 @@ information.
 
 ## License
 
-This code is licensed under the MIT-0 License. See the LICENSE file.
+This code is licensed under the MIT-0 License. See the [LICENSE](./LICENSE).

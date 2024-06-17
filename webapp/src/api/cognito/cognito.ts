@@ -6,10 +6,14 @@ import {
   AdminListGroupsForUserCommand,
   ListGroupsCommand,
   ListUsersCommand,
+  UserType,
+  AttributeType,
+  AdminUpdateUserAttributesCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
 
 import { Auth } from 'aws-amplify';
 import { useAuthStore } from '../../stores/auth-store';
+import { has, filter } from 'lodash';
 
 type CreateUserInput = {
   username: string;
@@ -38,6 +42,7 @@ export const createUser = async (params: CreateUserInput) => {
   try {
     const userPoolId = await getAuth().userPoolId;
     const client = await cognitoClient();
+    const userAttributes = await getAuth().userAttributes;
     const command = new AdminCreateUserCommand({
       UserPoolId: userPoolId,
       Username: params.username,
@@ -50,6 +55,19 @@ export const createUser = async (params: CreateUserInput) => {
     });
     const response = await client.send(command);
     console.log(response);
+    if (has(userAttributes, 'custom:tenantId')) {
+      const updateUserAttributesCommand = new AdminUpdateUserAttributesCommand({
+        UserPoolId: userPoolId,
+        Username: params.username,
+        UserAttributes: [
+          {
+            Name: 'custom:tenantId',
+            Value: userAttributes['custom:tenantId'],
+          },
+        ],
+      });
+      await client.send(updateUserAttributesCommand);
+    }
     return response;
   } catch (error) {
     return error;
@@ -104,12 +122,27 @@ export const listGroups = async () => {
 };
 export const listUsers = async () => {
   const userPoolId = await getAuth().userPoolId;
+  const userAttributes = await getAuth().userAttributes;
   const client = await cognitoClient();
   const command = new ListUsersCommand({
     UserPoolId: userPoolId,
   });
+  const userList: any[] = [];
   const response = await client.send(command);
-  return response;
+  if (has(userAttributes, 'custom:tenantId')) {
+    await Promise.all(
+      response.Users!.map(async (user: UserType) => {
+        filter(user.Attributes, (attribute: AttributeType) => {
+          if (attribute.Value === userAttributes['custom:tenantId']) {
+            userList.push(user);
+          }
+        });
+      })
+    );
+    return { Users: userList };
+  } else {
+    return response;
+  }
 };
 
 export const adminListGroupsForUsers = async (username: string) => {
