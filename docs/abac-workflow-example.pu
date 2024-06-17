@@ -1,0 +1,34 @@
+@startuml Sequence Diagram - Run Private workflows
+!$AWS_DARK = true
+!define AWSPuml https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v18.0/dist
+!include AWSPuml/AWSCommon.puml
+!include AWSPuml/AWSSimplified.puml
+!include AWSPuml/NetworkingContentDelivery/CloudFront.puml
+!include AWSPuml/ApplicationIntegration/AppSync.puml
+!include AWSPuml/SecurityIdentityCompliance/Cognito.puml
+!include AWSPuml/Compute/Lambda.puml
+!include AWSPuml/SecurityIdentityCompliance/IdentityAccessManagementRole.puml
+!include AWSPuml/Containers/ElasticContainerRegistry.puml
+!include AWSPuml/MachineLearning/HealthOmics.puml
+
+actor User as user
+CognitoParticipant(userAuth, "User Authentication", "get custom attributes")
+AppSyncParticipant(appsync,'API','')
+LambdaParticipant(lambda, "Check tag and invoke run workflows", "get iam role for tenantId and check permission")
+IdentityAccessManagementRoleParticipant(role,"Tenant Role","")
+ElasticContainerRegistryParticipant(repo,"Container images","")
+HealthOmicsParticipant(omics,"Private Workflows","run workflows")
+
+
+user --> userAuth: Get credentials and custom attributes
+user --> appsync: Invoke run private workflows
+appsync --> lambda: Invoke lambda with the attributes
+lambda --> role: Get the role for the tenant
+role --> lambda: Assume role for run workflows
+lambda --> repo: Check the permission to the tenant repository based on the tag
+lambda --> omics: Invoke run private workflows
+omics --> lambda: Return status code
+lambda --> appsync: Return status code
+appsync --> user: Return status code
+
+@enduml

@@ -11,6 +11,7 @@ import { mutationResolvers } from '../api/graphql/resolvers/resolverMutationConf
 import { ecrResolvers } from '../api/graphql/resolvers/resolverConfigForECR';
 
 interface ApplicationStackProps extends StackProps {
+  multiTenancy: boolean;
   adminEmail: string;
   adminUsername: string;
   omicsInput: string;
@@ -24,6 +25,7 @@ export class ApplicationStack extends NestedStack {
     super(scope, id, props);
 
     this.cognito = new Cognito(this, `${id}-cognito`, {
+      multiTenancy: props.multiTenancy,
       adminEmail: props.adminEmail,
       adminUsername: props.adminUsername,
       passwordPolicy: {
@@ -69,22 +71,10 @@ export class ApplicationStack extends NestedStack {
                 `arn:aws:s3:::${props.omicsOutput}`,
                 `arn:aws:s3:::${props.omicsOutput}/*`,
               ],
-              actions: ['s3:GetObject', 's3:GetBucketLocation', 's3:ListBucket', 's3:PutObject'],
+              actions: ['s3:PutObject'],
               effect: aws_iam.Effect.ALLOW,
             }),
-            new aws_iam.PolicyStatement({
-              resources: ['*'],
-              actions: [
-                'ecr:GetAuthorizationToken',
-                'ecr:BatchCheckLayerAvailability',
-                'ecr:GetDownloadUrlForLayer',
-                'ecr:GetRepositoryPolicy',
-                'ecr:ListImages',
-                'ecr:DescribeImages',
-                'ecr:BatchGetImage',
-              ],
-              effect: aws_iam.Effect.ALLOW,
-            }),
+
             new aws_iam.PolicyStatement({
               resources: ['*'],
               actions: ['omics:*'],
@@ -124,7 +114,7 @@ export class ApplicationStack extends NestedStack {
     );
     mutationOmicsLambdaRole.addToPrincipalPolicy(
       new aws_iam.PolicyStatement({
-        actions: ['omics:StartRun', 'omics:CreateWorkflow'],
+        actions: ['omics:StartRun', 'omics:CreateWorkflow', 'omics:TagResource'],
         resources: ['*'],
       })
     );
@@ -137,8 +127,14 @@ export class ApplicationStack extends NestedStack {
 
     mutationOmicsLambdaRole.addToPrincipalPolicy(
       new aws_iam.PolicyStatement({
-        actions: ['iam:GetRole', 'iam:PassRole'],
-        resources: [omicsRole.roleArn],
+        actions: ['sts:AssumeRole', 'iam:GetRole', 'iam:PassRole', 'iam:ListRoles'],
+        resources: ['*'],
+      })
+    );
+    mutationOmicsLambdaRole.addToPrincipalPolicy(
+      new aws_iam.PolicyStatement({
+        actions: ['ecr:DescribeRepositories', 'ecr:ListTagsForResource'],
+        resources: ['*'],
       })
     );
 
@@ -159,6 +155,8 @@ export class ApplicationStack extends NestedStack {
           'omics:ListWorkflows',
           'omics:GetRun',
           'omics:GetWorkflow',
+          'omics:TagResource',
+          'omics:ListTagsForResource',
         ],
         resources: ['*'],
       })
@@ -175,10 +173,81 @@ export class ApplicationStack extends NestedStack {
     );
     manipulationEcrLambdaRole.addToPrincipalPolicy(
       new aws_iam.PolicyStatement({
-        actions: ['ecr:CreateRepository', 'ecr:DescribeRepositories'],
+        actions: [
+          'ecr:CreateRepository',
+          'ecr:DescribeRepositories',
+          'ecr:GetAuthorizationToken',
+          'ecr:BatchCheckLayerAvailability',
+          'ecr:GetDownloadUrlForLayer',
+          'ecr:GetRepositoryPolicy',
+          'ecr:ListImages',
+          'ecr:TagResource',
+          'ecr:DescribeImages',
+          'ecr:BatchGetImage',
+          'ecr:ListTagsForResource',
+        ],
         resources: ['*'],
       })
     );
+
+    let tenantRoleArn: string;
+
+    if (!props.multiTenancy) {
+      omicsRole.addToPrincipalPolicy(
+        new aws_iam.PolicyStatement({
+          resources: ['*'],
+          actions: [
+            'ecr:GetAuthorizationToken',
+            'ecr:BatchCheckLayerAvailability',
+            'ecr:GetDownloadUrlForLayer',
+            'ecr:GetRepositoryPolicy',
+            'ecr:ListImages',
+            'ecr:DescribeImages',
+            'ecr:BatchGetImage',
+          ],
+          effect: aws_iam.Effect.ALLOW,
+        })
+      );
+
+      mutationOmicsLambdaRole.addToPrincipalPolicy(
+        new aws_iam.PolicyStatement({
+          actions: ['iam:GetRole', 'iam:PassRole'],
+          resources: [omicsRole.roleArn],
+        })
+      );
+    } else {
+      const tenancyRole = new aws_iam.Role(this, `${id}-tenancyRole`, {
+        assumedBy: new aws_iam.CompositePrincipal(
+          manipulationEcrLambdaRole,
+          mutationOmicsLambdaRole
+        ),
+      });
+      tenancyRole.addToPrincipalPolicy(
+        new aws_iam.PolicyStatement({
+          actions: [
+            'ecr:CreateRepository',
+            'ecr:DescribeRepositories',
+            'ecr:GetAuthorizationToken',
+            'ecr:BatchCheckLayerAvailability',
+            'ecr:GetDownloadUrlForLayer',
+            'ecr:GetRepositoryPolicy',
+            'ecr:ListImages',
+            'ecr:TagResource',
+            'ecr:DescribeImages',
+            'ecr:BatchGetImage',
+            'ecr:ListTagsForResource',
+            'iam:GetRole',
+            'iam:PassRole',
+            'omics:TagResource',
+            'omics:StartRun',
+            'omics:CreateWorkflow',
+          ],
+          resources: ['*'],
+        })
+      );
+
+      tenantRoleArn = tenancyRole.roleArn;
+    }
 
     const listOmicsJob = new NodejsLambda(this, `${id}-listOmicsJob`, {
       runtime: aws_lambda.Runtime.NODEJS_18_X,
@@ -186,7 +255,7 @@ export class ApplicationStack extends NestedStack {
       entry: path.join(__dirname, '../api/lambda/listOmicsJob/listOmicsJob.ts'),
       depsLockFilePath: path.join(__dirname, '../api/lambda/listOmicsJob/package-lock.json'),
       handler: 'handler',
-      timeout: Duration.seconds(12),
+      timeout: Duration.seconds(30),
       role: listOmicsJobLambdaRole,
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
@@ -204,7 +273,7 @@ export class ApplicationStack extends NestedStack {
       entry: path.join(__dirname, '../api/lambda/mutationOmics/mutationOmics.ts'),
       depsLockFilePath: path.join(__dirname, '../api/lambda/mutationOmics/package-lock.json'),
       handler: 'handler',
-      timeout: Duration.seconds(12),
+      timeout: Duration.seconds(30),
       role: mutationOmicsLambdaRole,
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
@@ -213,7 +282,12 @@ export class ApplicationStack extends NestedStack {
       },
       bundling: {
         externalModules: ['aws-sdk'],
-        nodeModules: ['@aws-sdk/client-omics', 'lodash'],
+        nodeModules: [
+          '@aws-sdk/client-omics',
+          '@aws-sdk/client-iam',
+          '@aws-sdk/client-ecr',
+          'lodash',
+        ],
       },
     });
 
@@ -223,7 +297,7 @@ export class ApplicationStack extends NestedStack {
       entry: path.join(__dirname, '../api/lambda/manipulationEcr/manipulationEcr.ts'),
       depsLockFilePath: path.join(__dirname, '../api/lambda/manipulationEcr/package-lock.json'),
       handler: 'handler',
-      timeout: Duration.seconds(12),
+      timeout: Duration.seconds(30),
       role: manipulationEcrLambdaRole,
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {

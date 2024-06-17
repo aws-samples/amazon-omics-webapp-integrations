@@ -18,9 +18,7 @@ export class AppSync extends Construct {
 
     this.api = new aws_appsync.GraphqlApi(this, 'graphql', {
       name: id,
-      schema: new aws_appsync.SchemaFile({
-        filePath: props.schema,
-      }),
+      definition: aws_appsync.Definition.fromFile(props.schema),
       logConfig: {
         fieldLogLevel: aws_appsync.FieldLogLevel.ERROR,
         role: new aws_iam.Role(this, 'appsync-log-role', {
