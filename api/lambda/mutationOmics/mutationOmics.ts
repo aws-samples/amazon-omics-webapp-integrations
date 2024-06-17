@@ -33,7 +33,6 @@ const getTenantRole = async (region: string, tenantId: string) => {
     };
     const command = new ListRolesCommand(input);
     const response = await iamClient.send(command);
-    console.log(response);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const tenantRoleArn = response.Roles![0].Arn;
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -142,7 +141,6 @@ export const handler: Handler = async (event: any, context: Context) => {
         }
       });
       console.log(filteredInput);
-      console.log(omicsRoleTag);
 
       const response = await client.send(new StartRunCommand(filteredInput));
       return response;
@@ -163,7 +161,6 @@ export const handler: Handler = async (event: any, context: Context) => {
       });
       console.log(filteredInput);
       const response = await client.send(new CreateWorkflowCommand(filteredInput));
-      console.log(response);
       return response;
     } catch (error) {
       console.log(error);
@@ -201,7 +198,6 @@ export const handler: Handler = async (event: any, context: Context) => {
         if (tenantId) {
           input = { ...input, tags: { tenantId: tenantId } };
         }
-        console.log(input);
         const res = await createWorkflow(input);
         console.log(res);
         return res;

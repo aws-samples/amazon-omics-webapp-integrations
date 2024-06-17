@@ -11,9 +11,8 @@ import {
   ListTagsForResourceCommand,
   WorkflowType,
   RunListItem,
-  TaskListItem,
 } from '@aws-sdk/client-omics';
-import { find, filter, has } from 'lodash';
+import { find } from 'lodash';
 
 export const handler: Handler = async (event: any, context: Context) => {
   const req = { ...event, ...context };

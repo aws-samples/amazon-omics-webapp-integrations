@@ -54,7 +54,6 @@ export const createUser = async (params: CreateUserInput) => {
       ],
     });
     const response = await client.send(command);
-    console.log(response);
     if (has(userAttributes, 'custom:tenantId')) {
       const updateUserAttributesCommand = new AdminUpdateUserAttributesCommand({
         UserPoolId: userPoolId,
