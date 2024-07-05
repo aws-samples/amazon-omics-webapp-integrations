@@ -21,7 +21,7 @@ import {
   DescribeRepositoriesCommandInput,
   ListTagsForResourceCommandInput,
 } from '@aws-sdk/client-ecr';
-import { forIn, isEmpty, assign, values, every } from 'lodash';
+import { forIn, isEmpty, assign, values, every, omit } from 'lodash';
 
 const getTenantRole = async (region: string, tenantId: string) => {
   const iamClient = new IAMClient({ region });
@@ -135,11 +135,14 @@ export const handler: Handler = async (event: any, context: Context) => {
   const startRunCommand = async (input: StartRunCommandInput) => {
     try {
       const filteredInput = {};
-      forIn(input, (value: any, i: string) => {
+      const params = input.workflowType === 'READY2RUN' ? omit(input, ['storageCapacity']) : input;
+
+      forIn(params, (value: any, i: string) => {
         if (!isEmpty(value.toString())) {
           assign(filteredInput, { [i]: value });
         }
       });
+
       console.log(filteredInput);
 
       const response = await client.send(new StartRunCommand(filteredInput));
